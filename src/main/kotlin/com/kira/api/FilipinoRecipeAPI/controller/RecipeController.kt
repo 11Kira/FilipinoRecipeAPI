@@ -25,6 +25,7 @@ class RecipeController(
         @field:NotBlank(message = "Instructions can't be blank.")
         val instructions: List<String> = emptyList(),
         val tips: List<String> = emptyList(),
+        val recipeId: Long = 0L
     )
 
     data class RecipeResponse(
@@ -34,6 +35,7 @@ class RecipeController(
         val ingredients: List<String>,
         val instructions: List<String>,
         val tips: List<String>,
+        val recipeId: Long,
         val createdAt: Instant
     )
 
@@ -59,6 +61,7 @@ class RecipeController(
                 description = body.description,
                 ingredients = body.ingredients,
                 tips = body.tips,
+                recipeId = body.recipeId,
                 createdAt = Instant.now()
             )
         )
@@ -75,6 +78,7 @@ private fun Recipe.toResponse(): RecipeResponse {
         ingredients = ingredients,
         instructions = instructions,
         tips = tips,
-        createdAt = createdAt
+        createdAt = createdAt,
+        recipeId = recipeId
     )
 }
