@@ -4,6 +4,7 @@ import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
+import java.time.Instant
 
 @Document("recipes")
 data class Recipe(
@@ -16,5 +17,6 @@ data class Recipe(
     val instructions: List<String> = emptyList(),
     val notes: List<String> = emptyList(),
     @Field("recipe_id")
-    val recipeId: Long = 0L
+    val recipeId: Long = 0L,
+    val createdAt: Instant
 )
