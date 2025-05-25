@@ -2,6 +2,7 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -19,7 +20,8 @@ class RecipeController(
     }
 
     @GetMapping("/{id}")
-    fun getRecipeById(@PathVariable("id") id: Long): Recipe? {
-        return recipeRepository.findByRecipeId(id)
+    fun getRecipeById(@PathVariable("id") id: Long): ResponseEntity<Recipe> {
+        val recipe = recipeRepository.findByRecipeId(id)
+        return if (recipe != null) ResponseEntity.ok(recipe) else ResponseEntity.notFound().build()
     }
 }
