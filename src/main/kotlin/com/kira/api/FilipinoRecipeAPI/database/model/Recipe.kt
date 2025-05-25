@@ -15,7 +15,7 @@ data class Recipe(
     val description: String = "",
     val ingredients: List<String> = emptyList(),
     val instructions: List<String> = emptyList(),
-    val notes: List<String> = emptyList(),
+    val tips: List<String> = emptyList(),
     @Field("recipe_id")
     val recipeId: Long = 0L,
     val createdAt: Instant
