@@ -1,13 +1,13 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
+import com.kira.api.FilipinoRecipeAPI.controller.RecipeController.RecipeResponse
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import java.time.Instant
 
 @RestController
 @RequestMapping("/recipes")
@@ -15,7 +15,8 @@ class RecipeController(
     private val recipeRepository: RecipeRepository
 ) {
     data class RecipeRequest(
-        val image: String?,
+        @field:NotBlank(message = "Image can't be blank.")
+        val image: String,
         @field:NotBlank(message = "Name can't be blank.")
         val name: String = "",
         val description: String = "",
@@ -24,6 +25,16 @@ class RecipeController(
         @field:NotBlank(message = "Instructions can't be blank.")
         val instructions: List<String> = emptyList(),
         val notes: List<String> = emptyList(),
+    )
+
+    data class RecipeResponse(
+        val image: String,
+        val name: String,
+        val description: String,
+        val ingredients: List<String>,
+        val instructions: List<String>,
+        val notes: List<String>,
+        val createdAt: Instant
     )
 
     @GetMapping
@@ -36,4 +47,34 @@ class RecipeController(
         val recipe = recipeRepository.findByRecipeId(id)
         return if (recipe != null) ResponseEntity.ok(recipe) else ResponseEntity.notFound().build()
     }
+
+    @PostMapping
+    fun save(
+        @Valid @RequestBody body: RecipeRequest
+    ): RecipeResponse {
+        val recipe = recipeRepository.save(
+            Recipe(
+                image = body.image,
+                name = body.name,
+                description = body.description,
+                ingredients = body.ingredients,
+                notes = body.notes,
+                createdAt = Instant.now()
+            )
+        )
+
+        return recipe.toResponse()
+    }
+}
+
+private fun Recipe.toResponse(): RecipeResponse {
+    return RecipeResponse(
+        image = image,
+        name = name,
+        description = description,
+        ingredients = ingredients,
+        instructions = instructions,
+        notes = notes,
+        createdAt = createdAt
+    )
 }
