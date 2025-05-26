@@ -67,6 +67,14 @@ class RecipeController(
         )
         return recipe.toResponse()
     }
+
+    @DeleteMapping("/{id}")
+    fun deleteRecipeById(@PathVariable("id") id: String) {
+        val recipe = recipeRepository.findById(id).orElseThrow {
+            IllegalArgumentException("Recipe not found")
+        }
+        recipeRepository.deleteById(id)
+    }
 }
 
 private fun Recipe.toResponse(): RecipeResponse =
