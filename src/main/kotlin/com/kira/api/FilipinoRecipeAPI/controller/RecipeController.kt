@@ -5,6 +5,7 @@ import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.Instant
@@ -20,14 +21,15 @@ class RecipeController(
         @field:NotBlank(message = "Name can't be blank.")
         val name: String = "",
         val description: String = "",
-        @field:NotBlank(message = "Ingredients can't be blank.")
+        @field:NotEmpty(message = "Ingredients can't be blank.")
         val ingredients: List<String> = emptyList(),
-        @field:NotBlank(message = "Instructions can't be blank.")
+        @field:NotEmpty(message = "Instructions can't be blank.")
         val instructions: List<String> = emptyList(),
         val tips: List<String> = emptyList(),
     )
 
     data class RecipeResponse(
+        val id: String,
         val image: String,
         val name: String,
         val description: String,
@@ -67,8 +69,9 @@ class RecipeController(
     }
 }
 
-private fun Recipe.toResponse(): RecipeResponse {
-    return RecipeResponse(
+private fun Recipe.toResponse(): RecipeResponse =
+    RecipeResponse(
+        id = this.id ?: "",
         image = image,
         name = name,
         description = description,
@@ -77,4 +80,3 @@ private fun Recipe.toResponse(): RecipeResponse {
         tips = tips,
         createdAt = createdAt,
     )
-}
