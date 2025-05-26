@@ -25,7 +25,6 @@ class RecipeController(
         @field:NotBlank(message = "Instructions can't be blank.")
         val instructions: List<String> = emptyList(),
         val tips: List<String> = emptyList(),
-        val recipeId: Long = 0L
     )
 
     data class RecipeResponse(
@@ -35,7 +34,6 @@ class RecipeController(
         val ingredients: List<String>,
         val instructions: List<String>,
         val tips: List<String>,
-        val recipeId: Long,
         val createdAt: Instant
     )
 
@@ -45,9 +43,9 @@ class RecipeController(
     }
 
     @GetMapping("/{id}")
-    fun getRecipeById(@PathVariable("id") id: Long): ResponseEntity<Recipe> {
-        val recipe = recipeRepository.findByRecipeId(id)
-        return if (recipe != null) ResponseEntity.ok(recipe) else ResponseEntity.notFound().build()
+    fun getRecipeById(@PathVariable("id") id: String): ResponseEntity<Recipe> {
+        val recipe = recipeRepository.findById(id)
+        return if (recipe.isPresent) ResponseEntity.ok(recipe.get()) else ResponseEntity.notFound().build()
     }
 
     @PostMapping
@@ -60,12 +58,11 @@ class RecipeController(
                 name = body.name,
                 description = body.description,
                 ingredients = body.ingredients,
+                instructions = body.instructions,
                 tips = body.tips,
-                recipeId = body.recipeId,
                 createdAt = Instant.now()
             )
         )
-
         return recipe.toResponse()
     }
 }
@@ -79,6 +76,5 @@ private fun Recipe.toResponse(): RecipeResponse {
         instructions = instructions,
         tips = tips,
         createdAt = createdAt,
-        recipeId = recipeId
     )
 }
