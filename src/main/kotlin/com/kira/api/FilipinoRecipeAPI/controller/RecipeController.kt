@@ -70,7 +70,7 @@ class RecipeController(
 
     @DeleteMapping("/{id}")
     fun deleteRecipeById(@PathVariable("id") id: String) {
-        val recipe = recipeRepository.findById(id).orElseThrow {
+        recipeRepository.findById(id).orElseThrow {
             IllegalArgumentException("Recipe not found")
         }.apply {
             recipeRepository.deleteById(id)
