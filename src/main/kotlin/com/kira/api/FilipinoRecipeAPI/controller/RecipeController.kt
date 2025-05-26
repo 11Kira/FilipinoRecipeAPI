@@ -72,8 +72,9 @@ class RecipeController(
     fun deleteRecipeById(@PathVariable("id") id: String) {
         val recipe = recipeRepository.findById(id).orElseThrow {
             IllegalArgumentException("Recipe not found")
+        }.apply {
+            recipeRepository.deleteById(id)
         }
-        recipeRepository.deleteById(id)
     }
 }
 
