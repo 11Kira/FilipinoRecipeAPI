@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*
 import java.time.Instant
 
 @RestController
-@RequestMapping("/recipes")
+@RequestMapping("/api/recipes")
 class RecipeController(
     private val recipeRepository: RecipeRepository
 ) {
@@ -38,8 +38,8 @@ class RecipeController(
     )
 
     @GetMapping
-    fun getCount(): Int {
-        return recipeRepository.findAll().count()
+    fun getAllRecipes(): List<Recipe> {
+        return recipeRepository.findAll()
     }
 
     @GetMapping("/{id}")
