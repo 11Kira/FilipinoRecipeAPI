@@ -6,8 +6,10 @@ import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 
 @RestController
@@ -36,7 +38,8 @@ class RecipeController(
         val ingredients: List<String>,
         val instructions: List<String>,
         val tips: List<String>,
-        val createdAt: Instant
+        val createdAt: Instant,
+        val updatedAt: Instant
     )
 
     @GetMapping
@@ -62,16 +65,37 @@ class RecipeController(
                 ingredients = body.ingredients,
                 instructions = body.instructions,
                 tips = body.tips,
-                createdAt = Instant.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         )
         return recipe.toResponse()
     }
 
+    @PutMapping("/{id}")
+    fun updateRecipeById(
+        @PathVariable id: String,
+        @Valid @RequestBody body: RecipeRequest
+    ): RecipeResponse {
+        val existingRecipe = recipeRepository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id") }
+        val updatedRecipe = existingRecipe.copy(
+            image = body.image,
+            name = body.name,
+            description = body.description,
+            ingredients = body.ingredients,
+            instructions = body.instructions,
+            tips = body.tips,
+            updatedAt = Instant.now()
+        )
+
+        val savedRecipe = recipeRepository.save(updatedRecipe)
+        return savedRecipe.toResponse()
+    }
+
     @DeleteMapping("/{id}")
     fun deleteRecipeById(@PathVariable("id") id: String) {
         recipeRepository.findById(id).orElseThrow {
-            IllegalArgumentException("Recipe not found")
+            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
         }.apply {
             recipeRepository.deleteById(id)
         }
@@ -88,4 +112,5 @@ private fun Recipe.toResponse(): RecipeResponse =
         instructions = instructions,
         tips = tips,
         createdAt = createdAt,
+        updatedAt = updatedAt
     )

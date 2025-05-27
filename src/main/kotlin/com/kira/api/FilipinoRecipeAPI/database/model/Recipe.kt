@@ -14,5 +14,6 @@ data class Recipe(
     val ingredients: List<String> = emptyList(),
     val instructions: List<String> = emptyList(),
     val tips: List<String> = emptyList(),
-    val createdAt: Instant
+    val createdAt: Instant,
+    val updatedAt: Instant
 )
