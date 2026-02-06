@@ -1,5 +1,6 @@
 package com.kira.api.FilipinoRecipeAPI.database.model
 
+import com.kira.api.FilipinoRecipeAPI.models.Ingredients
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.Instant
@@ -8,12 +9,15 @@ import java.time.Instant
 data class Recipe(
     @Id
     val id: String? = null,
-    val image: String = "",
-    val name: String = "",
+    val title: String = "",
     val description: String = "",
-    val ingredients: List<String> = emptyList(),
-    val instructions: List<String> = emptyList(),
-    val tips: List<String> = emptyList(),
+    val image: String = "",
+    val ingredients: Ingredients,
+    val steps: List<String> = emptyList(),
+    val cookingTips: List<String> = emptyList(),
+    val variations: List<String> = emptyList(),
+    val servingSuggestions: List<String> = emptyList(),
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val published: Boolean = false
 )
