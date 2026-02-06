@@ -1,8 +1,9 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
-import com.kira.api.FilipinoRecipeAPI.controller.RecipeController.RecipeResponse
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.models.Ingredients
+import com.kira.api.FilipinoRecipeAPI.models.RecipeResponse
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
@@ -18,28 +19,17 @@ class RecipeController(
     private val recipeRepository: RecipeRepository
 ) {
     data class RecipeRequest(
+        @field:NotBlank(message = "Title can't be blank.")
+        val title: String = "",
+        val description: String = "",
         @field:NotBlank(message = "Image can't be blank.")
         val image: String,
-        @field:NotBlank(message = "Name can't be blank.")
-        val name: String = "",
-        val description: String = "",
-        @field:NotEmpty(message = "Ingredients can't be blank.")
-        val ingredients: List<String> = emptyList(),
-        @field:NotEmpty(message = "Instructions can't be blank.")
-        val instructions: List<String> = emptyList(),
-        val tips: List<String> = emptyList(),
-    )
-
-    data class RecipeResponse(
-        val id: String,
-        val image: String,
-        val name: String,
-        val description: String,
-        val ingredients: List<String>,
-        val instructions: List<String>,
-        val tips: List<String>,
-        val createdAt: Instant,
-        val updatedAt: Instant
+        val ingredients: Ingredients,
+        @field:NotEmpty(message = "Steps can't be blank.")
+        val steps: List<String> = emptyList(),
+        val cookingTips: List<String> = emptyList(),
+        val variations: List<String> = emptyList(),
+        val servingSuggestions: List<String> = emptyList()
     )
 
     @GetMapping
@@ -59,14 +49,17 @@ class RecipeController(
     ): RecipeResponse {
         val recipe = recipeRepository.save(
             Recipe(
-                image = body.image,
-                name = body.name,
+                title = body.title,
                 description = body.description,
+                image = body.image,
                 ingredients = body.ingredients,
-                instructions = body.instructions,
-                tips = body.tips,
+                steps = body.steps,
+                cookingTips = body.cookingTips,
+                variations = body.variations,
+                servingSuggestions = body.servingSuggestions,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                published = true
             )
         )
         return recipe.toResponse()
@@ -77,14 +70,18 @@ class RecipeController(
         @PathVariable id: String,
         @Valid @RequestBody body: RecipeRequest
     ): RecipeResponse {
-        val existingRecipe = recipeRepository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id") }
+        val existingRecipe = recipeRepository.findById(id).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
+        }
         val updatedRecipe = existingRecipe.copy(
-            image = body.image,
-            name = body.name,
+            title = body.title,
             description = body.description,
+            image = body.image,
             ingredients = body.ingredients,
-            instructions = body.instructions,
-            tips = body.tips,
+            steps = body.steps,
+            cookingTips = body.cookingTips,
+            variations = body.variations,
+            servingSuggestions = body.servingSuggestions,
             updatedAt = Instant.now()
         )
 
@@ -105,12 +102,15 @@ class RecipeController(
 private fun Recipe.toResponse(): RecipeResponse =
     RecipeResponse(
         id = this.id ?: "",
-        image = image,
-        name = name,
+        title = title,
         description = description,
+        image = image,
         ingredients = ingredients,
-        instructions = instructions,
-        tips = tips,
+        steps = steps,
+        cookingTips = cookingTips,
+        variations = variations,
+        servingSuggestions = servingSuggestions,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        published = published
     )
