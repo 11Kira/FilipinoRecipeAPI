@@ -2,6 +2,8 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.models.Category
+import com.kira.api.FilipinoRecipeAPI.models.Difficulty
 import com.kira.api.FilipinoRecipeAPI.models.Ingredients
 import com.kira.api.FilipinoRecipeAPI.models.RecipeResponse
 import jakarta.validation.Valid
@@ -20,13 +22,19 @@ class RecipeController(
 ) {
     data class RecipeRequest(
         @field:NotBlank(message = "Title can't be blank.")
-        val title: String = "",
+        val title: String,
         val description: String = "",
         @field:NotBlank(message = "Image can't be blank.")
         val image: String,
+        @field:NotBlank(message = "Estimated minutes can't be blank.")
+        val estimatedMinutes: Int,
+        @field:NotBlank(message = "Difficulty can't be blank.")
+        val difficulty: Difficulty,
+        @field:NotBlank(message = "Category can't be blank.")
+        val category: Category,
         val ingredients: Ingredients,
         @field:NotEmpty(message = "Steps can't be blank.")
-        val steps: List<String> = emptyList(),
+        val steps: List<String>,
         val cookingTips: List<String> = emptyList(),
         val variations: List<String> = emptyList(),
         val servingSuggestions: List<String> = emptyList()
@@ -52,6 +60,9 @@ class RecipeController(
                 title = body.title,
                 description = body.description,
                 image = body.image,
+                estimatedMinutes = body.estimatedMinutes,
+                difficulty = body.difficulty,
+                category = body.category,
                 ingredients = body.ingredients,
                 steps = body.steps,
                 cookingTips = body.cookingTips,
@@ -77,6 +88,9 @@ class RecipeController(
             title = body.title,
             description = body.description,
             image = body.image,
+            estimatedMinutes = body.estimatedMinutes,
+            difficulty = body.difficulty,
+            category = body.category,
             ingredients = body.ingredients,
             steps = body.steps,
             cookingTips = body.cookingTips,
@@ -105,6 +119,9 @@ private fun Recipe.toResponse(): RecipeResponse =
         title = title,
         description = description,
         image = image,
+        estimatedMinutes = estimatedMinutes,
+        difficulty = difficulty,
+        category = category,
         ingredients = ingredients,
         steps = steps,
         cookingTips = cookingTips,
