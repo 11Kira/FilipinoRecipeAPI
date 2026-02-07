@@ -2,13 +2,11 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
-import com.kira.api.FilipinoRecipeAPI.models.Category
-import com.kira.api.FilipinoRecipeAPI.models.Difficulty
-import com.kira.api.FilipinoRecipeAPI.models.Ingredients
-import com.kira.api.FilipinoRecipeAPI.models.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.models.*
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
+import org.jetbrains.annotations.NotNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -26,11 +24,11 @@ class RecipeController(
         val description: String = "",
         @field:NotBlank(message = "Image can't be blank.")
         val image: String,
-        @field:NotBlank(message = "Estimated minutes can't be blank.")
+        @field:NotNull
         val estimatedMinutes: Int,
-        @field:NotBlank(message = "Difficulty can't be blank.")
+        @field:NotNull
         val difficulty: Difficulty,
-        @field:NotBlank(message = "Category can't be blank.")
+        @field:NotNull
         val category: Category,
         val ingredients: Ingredients,
         @field:NotEmpty(message = "Steps can't be blank.")
@@ -74,6 +72,63 @@ class RecipeController(
             )
         )
         return recipe.toResponse()
+    }
+
+    @PatchMapping("/{id}")
+    fun patchRecipeById(
+        @PathVariable id: String,
+        @RequestBody body: RecipePatchRequest
+    ): RecipeResponse {
+        val existingRecipe = recipeRepository.findById(id).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
+        }
+
+        if (
+            body.title == null &&
+            body.description == null &&
+            body.image == null &&
+            body.estimatedMinutes == null &&
+            body.difficulty == null &&
+            body.category == null &&
+            body.ingredients == null &&
+            body.steps == null &&
+            body.cookingTips == null &&
+            body.variations == null &&
+            body.servingSuggestions == null
+        ) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "At least one field must be provided for update"
+            )
+        }
+
+        val updatedIngredients = body.ingredients?.let { patch ->
+            existingRecipe.ingredients.copy(
+                main = patch.main ?: existingRecipe.ingredients.main,
+                aromatics = patch.aromatics ?: existingRecipe.ingredients.aromatics,
+                liquidsAndSeasonings = patch.liquidsAndSeasonings ?: existingRecipe.ingredients.liquidsAndSeasonings,
+                vegetables = patch.vegetables ?: existingRecipe.ingredients.vegetables,
+                optionalAddons = patch.optionalAddons ?: existingRecipe.ingredients.optionalAddons
+            )
+        } ?: existingRecipe.ingredients
+
+        val updatedRecipe = existingRecipe.copy(
+            title = body.title ?: existingRecipe.title,
+            description = body.description ?: existingRecipe.description,
+            image = body.image ?: existingRecipe.image,
+            estimatedMinutes = body.estimatedMinutes ?: existingRecipe.estimatedMinutes,
+            difficulty = body.difficulty ?: existingRecipe.difficulty,
+            category = body.category ?: existingRecipe.category,
+            ingredients = updatedIngredients,
+            steps = body.steps ?: existingRecipe.steps,
+            cookingTips = body.cookingTips ?: existingRecipe.cookingTips,
+            variations = body.variations ?: existingRecipe.variations,
+            servingSuggestions = body.servingSuggestions ?: existingRecipe.servingSuggestions,
+            updatedAt = Instant.now()
+        )
+
+        val savedRecipe = recipeRepository.save(updatedRecipe)
+        return savedRecipe.toResponse()
     }
 
     @PutMapping("/{id}")
