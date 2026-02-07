@@ -1,28 +1,28 @@
-package com.kira.api.FilipinoRecipeAPI.database.model
+package com.kira.api.FilipinoRecipeAPI.models.requests
 
 import com.kira.api.FilipinoRecipeAPI.models.Ingredients
 import com.kira.api.FilipinoRecipeAPI.models.enums.Category
 import com.kira.api.FilipinoRecipeAPI.models.enums.Difficulty
-import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.mapping.Document
-import java.time.Instant
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
+import org.jetbrains.annotations.NotNull
 
-@Document("recipes")
-data class Recipe(
-    @Id
-    val id: String? = null,
+data class RecipeRequest(
+    @field:NotBlank(message = "Title can't be blank.")
     val title: String,
     val description: String = "",
+    @field:NotBlank(message = "Image can't be blank.")
     val image: String,
+    @field:NotNull
     val estimatedMinutes: Int,
+    @field:NotNull
     val difficulty: Difficulty,
+    @field:NotNull
     val category: Category,
     val ingredients: Ingredients,
+    @field:NotEmpty(message = "Steps can't be blank.")
     val steps: List<String>,
     val cookingTips: List<String> = emptyList(),
     val variations: List<String> = emptyList(),
-    val servingSuggestions: List<String> = emptyList(),
-    val createdAt: Instant,
-    val updatedAt: Instant,
-    val published: Boolean = false
+    val servingSuggestions: List<String> = emptyList()
 )

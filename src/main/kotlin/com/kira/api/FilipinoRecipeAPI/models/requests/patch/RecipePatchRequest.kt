@@ -1,4 +1,7 @@
-package com.kira.api.FilipinoRecipeAPI.models
+package com.kira.api.FilipinoRecipeAPI.models.requests.patch
+
+import com.kira.api.FilipinoRecipeAPI.models.enums.Category
+import com.kira.api.FilipinoRecipeAPI.models.enums.Difficulty
 
 data class RecipePatchRequest(
     val title: String? = null,

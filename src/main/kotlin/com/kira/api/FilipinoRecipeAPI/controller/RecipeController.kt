@@ -2,11 +2,10 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
-import com.kira.api.FilipinoRecipeAPI.models.*
+import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
+import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
+import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotEmpty
-import org.jetbrains.annotations.NotNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,26 +17,6 @@ import java.time.Instant
 class RecipeController(
     private val recipeRepository: RecipeRepository
 ) {
-    data class RecipeRequest(
-        @field:NotBlank(message = "Title can't be blank.")
-        val title: String,
-        val description: String = "",
-        @field:NotBlank(message = "Image can't be blank.")
-        val image: String,
-        @field:NotNull
-        val estimatedMinutes: Int,
-        @field:NotNull
-        val difficulty: Difficulty,
-        @field:NotNull
-        val category: Category,
-        val ingredients: Ingredients,
-        @field:NotEmpty(message = "Steps can't be blank.")
-        val steps: List<String>,
-        val cookingTips: List<String> = emptyList(),
-        val variations: List<String> = emptyList(),
-        val servingSuggestions: List<String> = emptyList()
-    )
-
     @GetMapping
     fun getAllRecipes(): List<Recipe> {
         return recipeRepository.findAll()

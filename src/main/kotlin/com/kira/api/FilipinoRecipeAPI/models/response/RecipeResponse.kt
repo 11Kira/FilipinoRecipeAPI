@@ -1,5 +1,8 @@
-package com.kira.api.FilipinoRecipeAPI.models
+package com.kira.api.FilipinoRecipeAPI.models.response
 
+import com.kira.api.FilipinoRecipeAPI.models.Ingredients
+import com.kira.api.FilipinoRecipeAPI.models.enums.Category
+import com.kira.api.FilipinoRecipeAPI.models.enums.Difficulty
 import java.time.Instant
 
 data class RecipeResponse(

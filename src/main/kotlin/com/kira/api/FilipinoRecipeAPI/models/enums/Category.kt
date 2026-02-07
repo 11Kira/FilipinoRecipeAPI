@@ -1,4 +1,4 @@
-package com.kira.api.FilipinoRecipeAPI.models
+package com.kira.api.FilipinoRecipeAPI.models.enums
 
 enum class Category {
     BEEF,

@@ -1,4 +1,4 @@
-package com.kira.api.FilipinoRecipeAPI.models
+package com.kira.api.FilipinoRecipeAPI.models.requests.patch
 
 data class IngredientsPatchRequest(
     val main: List<String>? = null,
