@@ -1,16 +1,12 @@
-package com.kira.api.FilipinoRecipeAPI.database.model
+package com.kira.api.FilipinoRecipeAPI.models.response
 
 import com.kira.api.FilipinoRecipeAPI.models.Ingredients
 import com.kira.api.FilipinoRecipeAPI.models.enums.Category
 import com.kira.api.FilipinoRecipeAPI.models.enums.Difficulty
-import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.mapping.Document
 import java.time.Instant
 
-@Document("recipes")
-data class Recipe(
-    @Id
-    val id: String? = null,
+data class RecipeResponse(
+    val id: String,
     val title: String,
     val description: String = "",
     val image: String,
@@ -24,5 +20,5 @@ data class Recipe(
     val servingSuggestions: List<String> = emptyList(),
     val createdAt: Instant,
     val updatedAt: Instant,
-    val published: Boolean = false
+    val published: Boolean
 )
