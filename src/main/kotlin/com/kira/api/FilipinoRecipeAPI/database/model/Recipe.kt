@@ -1,5 +1,7 @@
 package com.kira.api.FilipinoRecipeAPI.database.model
 
+import com.kira.api.FilipinoRecipeAPI.models.Category
+import com.kira.api.FilipinoRecipeAPI.models.Difficulty
 import com.kira.api.FilipinoRecipeAPI.models.Ingredients
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
@@ -9,11 +11,14 @@ import java.time.Instant
 data class Recipe(
     @Id
     val id: String? = null,
-    val title: String = "",
+    val title: String,
     val description: String = "",
-    val image: String = "",
+    val image: String,
+    val estimatedMinutes: Int,
+    val difficulty: Difficulty,
+    val category: Category,
     val ingredients: Ingredients,
-    val steps: List<String> = emptyList(),
+    val steps: List<String>,
     val cookingTips: List<String> = emptyList(),
     val variations: List<String> = emptyList(),
     val servingSuggestions: List<String> = emptyList(),
