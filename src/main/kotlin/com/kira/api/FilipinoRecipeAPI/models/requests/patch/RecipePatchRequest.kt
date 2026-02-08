@@ -2,6 +2,8 @@ package com.kira.api.FilipinoRecipeAPI.models.requests.patch
 
 import com.kira.api.FilipinoRecipeAPI.models.enums.Category
 import com.kira.api.FilipinoRecipeAPI.models.enums.Difficulty
+import com.kira.api.FilipinoRecipeAPI.models.enums.MealTime
+import com.kira.api.FilipinoRecipeAPI.models.enums.Protein
 
 data class RecipePatchRequest(
     val title: String? = null,
@@ -10,6 +12,8 @@ data class RecipePatchRequest(
     val estimatedMinutes: Int? = null,
     val difficulty: Difficulty? = null,
     val category: Category? = null,
+    val protein: Protein? = null,
+    val mealTime: MealTime? = null,
     val ingredients: IngredientsPatchRequest? = null,
     val steps: List<String>? = null,
     val cookingTips: List<String>? = null,
