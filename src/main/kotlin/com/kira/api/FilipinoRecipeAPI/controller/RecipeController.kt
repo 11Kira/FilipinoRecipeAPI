@@ -40,6 +40,8 @@ class RecipeController(
                 estimatedMinutes = body.estimatedMinutes,
                 difficulty = body.difficulty,
                 category = body.category,
+                protein = body.protein,
+                mealTime = body.mealTime,
                 ingredients = body.ingredients,
                 steps = body.steps,
                 cookingTips = body.cookingTips,
@@ -69,6 +71,8 @@ class RecipeController(
             body.estimatedMinutes == null &&
             body.difficulty == null &&
             body.category == null &&
+            body.protein == null &&
+            body.mealTime == null &&
             body.ingredients == null &&
             body.steps == null &&
             body.cookingTips == null &&
@@ -98,6 +102,8 @@ class RecipeController(
             estimatedMinutes = body.estimatedMinutes ?: existingRecipe.estimatedMinutes,
             difficulty = body.difficulty ?: existingRecipe.difficulty,
             category = body.category ?: existingRecipe.category,
+            protein = body.protein ?: existingRecipe.protein,
+            mealTime = body.mealTime ?: existingRecipe.mealTime,
             ingredients = updatedIngredients,
             steps = body.steps ?: existingRecipe.steps,
             cookingTips = body.cookingTips ?: existingRecipe.cookingTips,
@@ -125,6 +131,8 @@ class RecipeController(
             estimatedMinutes = body.estimatedMinutes,
             difficulty = body.difficulty,
             category = body.category,
+            protein = body.protein,
+            mealTime = body.mealTime,
             ingredients = body.ingredients,
             steps = body.steps,
             cookingTips = body.cookingTips,
@@ -156,6 +164,8 @@ private fun Recipe.toResponse(): RecipeResponse =
         estimatedMinutes = estimatedMinutes,
         difficulty = difficulty,
         category = category,
+        protein = protein,
+        mealTime = mealTime,
         ingredients = ingredients,
         steps = steps,
         cookingTips = cookingTips,
