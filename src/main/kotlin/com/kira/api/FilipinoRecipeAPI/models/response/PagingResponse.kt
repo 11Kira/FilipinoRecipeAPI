@@ -5,5 +5,5 @@ data class PagingResponse(
     val size: Int,
     val total: Long,
     val next: String?,
-    val prev: String?,
+    val previous: String?,
 )
