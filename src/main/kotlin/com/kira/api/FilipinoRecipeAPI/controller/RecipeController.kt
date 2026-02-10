@@ -4,8 +4,12 @@ import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
+import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
+import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,8 +22,55 @@ class RecipeController(
     private val recipeRepository: RecipeRepository
 ) {
     @GetMapping
-    fun getAllRecipes(): List<Recipe> {
-        return recipeRepository.findAll()
+    fun getAllRecipes(
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        request: HttpServletRequest
+    ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
+        return runCatching {
+            val pageable = PageRequest.of(page - 1, size)
+            val pageResult = recipeRepository.findAll(pageable)
+            val data = pageResult.content.map { it.toResponse() }
+            val baseUrl = request.requestURL.toString()
+            fun pageUrl(page: Int) =
+                "$baseUrl?page=$page&size=${pageable.pageSize}"
+
+            val next = if (pageResult.hasNext())
+                pageUrl(pageable.pageNumber + 1)
+            else
+                null
+
+            val previous = if (pageResult.hasPrevious())
+                pageUrl(pageable.pageNumber - 1)
+            else
+                null
+
+            ResponseEntity.ok(
+                ApiResponse(
+                    status = "success",
+                    message = "Recipes fetched successfully",
+                    data = data,
+                    paging = PagingResponse(
+                        page = pageable.pageNumber + 1,
+                        size = pageable.pageSize,
+                        total = pageResult.totalElements,
+                        next = next,
+                        previous = previous
+                    )
+                )
+            )
+        }.getOrElse { exception ->
+            ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(
+                    ApiResponse(
+                        status = "failed",
+                        message = exception.message ?: "Failed to fetch recipes",
+                        data = null,
+                        paging = null
+                    )
+                )
+        }
     }
 
     @GetMapping("/{id}")
