@@ -9,7 +9,7 @@ import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
-import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -23,9 +23,11 @@ class RecipeController(
 ) {
     @GetMapping
     fun getAllRecipes(
-        pageable: Pageable,
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
+        val pageable = PageRequest.of(page - 1, size)
         val pageResult = recipeRepository.findAll(pageable)
         val data = pageResult.content.map { it.toResponse() }
         val baseUrl = request.requestURL.toString()
@@ -48,7 +50,7 @@ class RecipeController(
                 message = "Recipes fetched successfully",
                 data = data,
                 paging = PagingResponse(
-                    page = pageable.pageNumber + 1,
+                    page = pageable.pageNumber,
                     size = pageable.pageSize,
                     total = pageResult.totalElements,
                     next = next,
