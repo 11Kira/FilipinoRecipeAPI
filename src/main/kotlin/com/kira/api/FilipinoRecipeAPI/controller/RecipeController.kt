@@ -121,9 +121,8 @@ class RecipeController(
         @PathVariable id: String,
         @RequestBody body: RecipePatchRequest
     ): RecipeResponse {
-        val existingRecipe = recipeRepository.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
-        }
+        val existingRecipe =
+            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
 
         if (
             body.title == null &&
@@ -182,9 +181,8 @@ class RecipeController(
         @PathVariable id: String,
         @Valid @RequestBody body: RecipeRequest
     ): RecipeResponse {
-        val existingRecipe = recipeRepository.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
-        }
+        val existingRecipe =
+            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
         val updatedRecipe = existingRecipe.copy(
             title = body.title,
             description = body.description,
@@ -209,7 +207,7 @@ class RecipeController(
     @DeleteMapping("/{id}")
     fun deleteRecipeById(@PathVariable("id") id: String) {
         recipeRepository.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
+            ResourceNotFoundException("Recipe not found with id: $id")
         }.apply {
             recipeRepository.deleteById(id)
         }
