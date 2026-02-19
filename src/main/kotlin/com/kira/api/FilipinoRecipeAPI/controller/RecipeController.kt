@@ -82,7 +82,7 @@ class RecipeController(
         return ResponseEntity.ok(
             ApiResponse(
                 status = ResponseStatus.SUCCESS,
-                message = "Recipe fetched successfully",
+                message = "Recipe retrieved successfully",
                 data = recipe.toResponse(),
                 paging = null
             )
