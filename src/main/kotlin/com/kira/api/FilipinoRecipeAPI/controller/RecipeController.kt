@@ -2,6 +2,8 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
+import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
 import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
@@ -47,8 +49,8 @@ class RecipeController(
 
             ResponseEntity.ok(
                 ApiResponse(
-                    status = "success",
-                    message = "Recipes fetched successfully",
+                    status = ResponseStatus.SUCCESS,
+                    message = "Recipes retrieved successfully",
                     data = data,
                     paging = PagingResponse(
                         page = pageable.pageNumber + 1,
@@ -64,8 +66,8 @@ class RecipeController(
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                     ApiResponse(
-                        status = "failed",
-                        message = exception.message ?: "Failed to fetch recipes",
+                        status = ResponseStatus.FAILED,
+                        message = exception.message ?: "Failed to retrieve recipes",
                         data = null,
                         paging = null
                     )
@@ -74,15 +76,23 @@ class RecipeController(
     }
 
     @GetMapping("/{id}")
-    fun getRecipeById(@PathVariable("id") id: String): ResponseEntity<Recipe> {
-        val recipe = recipeRepository.findById(id)
-        return if (recipe.isPresent) ResponseEntity.ok(recipe.get()) else ResponseEntity.notFound().build()
+    fun getRecipeById(@PathVariable("id") id: String): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val recipe =
+            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = ResponseStatus.SUCCESS,
+                message = "Recipe retrieved successfully",
+                data = recipe.toResponse(),
+                paging = null
+            )
+        )
     }
 
     @PostMapping
     fun save(
         @Valid @RequestBody body: RecipeRequest
-    ): RecipeResponse {
+    ): ResponseEntity<ApiResponse<RecipeResponse>> {
         val recipe = recipeRepository.save(
             Recipe(
                 title = body.title,
@@ -103,17 +113,23 @@ class RecipeController(
                 published = true
             )
         )
-        return recipe.toResponse()
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = ResponseStatus.SUCCESS,
+                message = "Recipe created successfully",
+                data = recipe.toResponse(),
+                paging = null
+            )
+        )
     }
 
     @PatchMapping("/{id}")
     fun patchRecipeById(
         @PathVariable id: String,
         @RequestBody body: RecipePatchRequest
-    ): RecipeResponse {
-        val existingRecipe = recipeRepository.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
-        }
+    ): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val existingRecipe =
+            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
 
         if (
             body.title == null &&
@@ -164,17 +180,23 @@ class RecipeController(
         )
 
         val savedRecipe = recipeRepository.save(updatedRecipe)
-        return savedRecipe.toResponse()
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = ResponseStatus.SUCCESS,
+                message = "Recipe updated successfully",
+                data = savedRecipe.toResponse(),
+                paging = null
+            )
+        )
     }
 
     @PutMapping("/{id}")
     fun updateRecipeById(
         @PathVariable id: String,
         @Valid @RequestBody body: RecipeRequest
-    ): RecipeResponse {
-        val existingRecipe = recipeRepository.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
-        }
+    ): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val existingRecipe =
+            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
         val updatedRecipe = existingRecipe.copy(
             title = body.title,
             description = body.description,
@@ -193,13 +215,20 @@ class RecipeController(
         )
 
         val savedRecipe = recipeRepository.save(updatedRecipe)
-        return savedRecipe.toResponse()
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = ResponseStatus.SUCCESS,
+                message = "Recipe updated successfully",
+                data = savedRecipe.toResponse(),
+                paging = null
+            )
+        )
     }
 
     @DeleteMapping("/{id}")
     fun deleteRecipeById(@PathVariable("id") id: String) {
         recipeRepository.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
+            ResourceNotFoundException("Recipe not found with id: $id")
         }.apply {
             recipeRepository.deleteById(id)
         }
