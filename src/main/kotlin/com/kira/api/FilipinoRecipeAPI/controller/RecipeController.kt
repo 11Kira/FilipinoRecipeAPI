@@ -2,6 +2,7 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
 import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
@@ -48,7 +49,7 @@ class RecipeController(
 
             ResponseEntity.ok(
                 ApiResponse(
-                    status = "success",
+                    status = ResponseStatus.SUCCESS,
                     message = "Recipes fetched successfully",
                     data = data,
                     paging = PagingResponse(
@@ -65,7 +66,7 @@ class RecipeController(
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                     ApiResponse(
-                        status = "failed",
+                        status = ResponseStatus.FAILED,
                         message = exception.message ?: "Failed to fetch recipes",
                         data = null,
                         paging = null
@@ -80,7 +81,7 @@ class RecipeController(
             recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
         return ResponseEntity.ok(
             ApiResponse(
-                status = "success",
+                status = ResponseStatus.SUCCESS,
                 message = "Recipe fetched successfully",
                 data = recipe.toResponse(),
                 paging = null
