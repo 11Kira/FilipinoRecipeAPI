@@ -74,9 +74,18 @@ class RecipeController(
     }
 
     @GetMapping("/{id}")
-    fun getRecipeById(@PathVariable("id") id: String): ResponseEntity<Recipe> {
-        val recipe = recipeRepository.findById(id)
-        return if (recipe.isPresent) ResponseEntity.ok(recipe.get()) else ResponseEntity.notFound().build()
+    fun getRecipeById(@PathVariable("id") id: String): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val recipe = recipeRepository.findById(id).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
+        }
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = "success",
+                message = "Recipe fetched successfully",
+                data = recipe.toResponse(),
+                paging = null
+            )
+        )
     }
 
     @PostMapping
