@@ -2,6 +2,7 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
 import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
@@ -75,9 +76,8 @@ class RecipeController(
 
     @GetMapping("/{id}")
     fun getRecipeById(@PathVariable("id") id: String): ResponseEntity<ApiResponse<RecipeResponse>> {
-        val recipe = recipeRepository.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found with id: $id")
-        }
+        val recipe =
+            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
         return ResponseEntity.ok(
             ApiResponse(
                 status = "success",
