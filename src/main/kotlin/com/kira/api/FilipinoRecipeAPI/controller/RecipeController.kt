@@ -12,6 +12,7 @@ import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -27,30 +28,73 @@ class RecipeController(
     fun getAllRecipes(
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) category: String?,
+        @RequestParam(required = false) protein: String?,
+        @RequestParam(required = false) difficulty: String?,
+        @RequestParam(required = false) maxCookingTime: Int?,
+        @RequestParam(defaultValue = "createdAt,desc") sort: String,
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
+
         return runCatching {
-            val pageable = PageRequest.of(page - 1, size)
-            val pageResult = recipeRepository.findAll(pageable)
+            val categoryList: List<String>? = category
+                ?.split(",")
+                ?.map { it.trim().uppercase() }
+                ?.filter { it.isNotBlank() }
+                ?.takeIf { it.isNotEmpty() }
+            val proteinList: List<String>? = protein
+                ?.split(",")
+                ?.map { it.trim().uppercase() }
+                ?.filter { it.isNotBlank() }
+                ?.takeIf { it.isNotEmpty() }
+            val difficultyList: List<String>? = difficulty
+                ?.split(",")
+                ?.map { it.trim().uppercase() }
+                ?.filter { it.isNotBlank() }
+                ?.takeIf { it.isNotEmpty() }
+
+            val sortParts = sort.split(",")
+            val direction = if (sortParts[1].equals("desc", true))
+                Sort.Direction.DESC else Sort.Direction.ASC
+
+            val pageable = PageRequest.of(
+                page - 1,
+                size,
+                Sort.by(direction, sortParts[0])
+            )
+
+            val pageResult = recipeRepository.searchRecipes(
+                query = query,
+                categoryList = categoryList,
+                proteinList = proteinList,
+                difficultyList = difficultyList,
+                maxCookingTime = maxCookingTime,
+                pageable = pageable
+            )
+
             val data = pageResult.content.map { it.toResponse() }
             val baseUrl = request.requestURL.toString()
+
             fun pageUrl(page: Int) =
-                "$baseUrl?page=$page&size=${pageable.pageSize}"
+                "$baseUrl?page=$page&size=${pageable.pageSize}" +
+                        (if (!query.isNullOrBlank()) "&query=$query" else "")
 
             val next = if (pageResult.hasNext())
-                pageUrl(pageable.pageNumber + 1)
-            else
-                null
+                pageUrl(pageable.pageNumber + 2)
+            else null
 
             val previous = if (pageResult.hasPrevious())
-                pageUrl(pageable.pageNumber - 1)
-            else
-                null
+                pageUrl(pageable.pageNumber)
+            else null
 
             ResponseEntity.ok(
                 ApiResponse(
                     status = ResponseStatus.SUCCESS,
-                    message = "Recipes retrieved successfully",
+                    message = if (query.isNullOrBlank())
+                        "Recipes retrieved successfully"
+                    else
+                        "Search results retrieved successfully",
                     data = data,
                     paging = PagingResponse(
                         page = pageable.pageNumber + 1,
@@ -61,6 +105,7 @@ class RecipeController(
                     )
                 )
             )
+
         }.getOrElse { exception ->
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
