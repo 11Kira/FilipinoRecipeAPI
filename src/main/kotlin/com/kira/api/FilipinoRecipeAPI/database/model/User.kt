@@ -12,8 +12,8 @@ data class User(
 
     @Indexed(unique = true) // This tells Spring to handle the unique index for you
     val username: String,
-
-    val password: String,
+    val email: String,
+    val hashedPassword: String,
     val roles: List<Role> = listOf(Role.ROLE_USER),
     val favoriteRecipeIds: List<String> = emptyList()
 )
