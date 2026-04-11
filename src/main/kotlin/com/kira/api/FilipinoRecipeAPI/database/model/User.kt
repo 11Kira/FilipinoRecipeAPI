@@ -14,6 +14,6 @@ data class User(
     val username: String,
     val email: String,
     val hashedPassword: String,
-    val roles: List<Role> = listOf(Role.ROLE_USER),
+    val roles: Role = Role.ROLE_ADMIN,
     val favoriteRecipeIds: List<String> = emptyList()
 )
