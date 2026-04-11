@@ -135,7 +135,7 @@ class RecipeController(
     }
 
     @PostMapping
-    fun save(
+    fun saveRecipe(
         @Valid @RequestBody body: RecipeRequest
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
         val recipe = recipeRepository.save(
@@ -278,6 +278,15 @@ class RecipeController(
             recipeRepository.deleteById(id)
         }
     }
+
+    /*@PostMapping("/{id}")
+    fun addToFavoriteRecipes(@PathVariable("id") id: String) {
+        recipeRepository.findById(id).orElseThrow {
+            ResourceNotFoundException("Recipe not found with id: $id")
+        }.apply {
+            recipeRepository.deleteById(id)
+        }
+    }*/
 }
 
 private fun Recipe.toResponse(): RecipeResponse =
