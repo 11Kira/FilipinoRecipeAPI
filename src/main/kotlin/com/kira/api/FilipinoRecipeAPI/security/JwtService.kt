@@ -33,7 +33,7 @@ class JwtService(
 
     fun generateAccessToken(userId: String): String = generateToken(userId, "access", accessTokenValidityMs)
 
-    fun generaRefreshToken(userId: String): String = generateToken(userId, "refresh", refreshTokenValidityMs)
+    fun generateRefreshToken(userId: String): String = generateToken(userId, "refresh", refreshTokenValidityMs)
 
     fun validateAccessToken(token: String): Boolean {
         val claims = parseAllClaims(token) ?: return false
