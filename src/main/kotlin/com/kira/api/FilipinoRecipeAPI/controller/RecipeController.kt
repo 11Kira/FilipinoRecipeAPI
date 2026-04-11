@@ -1,7 +1,7 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
-import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.database.repository.recipe.RecipeRepository
 import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
 import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest

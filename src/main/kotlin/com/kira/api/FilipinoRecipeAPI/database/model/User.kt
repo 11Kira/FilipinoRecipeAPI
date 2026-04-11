@@ -1,5 +1,6 @@
 package com.kira.api.FilipinoRecipeAPI.database.model
 
+import com.kira.api.FilipinoRecipeAPI.models.enums.Role
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
@@ -13,6 +14,6 @@ data class User(
     val username: String,
 
     val password: String,
-    val roles: List<String>,
+    val roles: List<Role> = listOf(Role.ROLE_USER),
     val favoriteRecipeIds: List<String> = emptyList()
 )

@@ -1,4 +1,4 @@
-package com.kira.api.FilipinoRecipeAPI.database.repository
+package com.kira.api.FilipinoRecipeAPI.database.repository.recipe
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 import org.springframework.data.domain.Page
