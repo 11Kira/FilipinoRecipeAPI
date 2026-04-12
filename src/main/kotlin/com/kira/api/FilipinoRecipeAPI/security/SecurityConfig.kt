@@ -24,6 +24,7 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/auth/**").permitAll()
+                auth.requestMatchers(HttpMethod.POST, "/api/users/favorites/**").authenticated()
                 auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
                 auth.requestMatchers(HttpMethod.POST, "/api/recipes/**").hasRole("ADMIN")
                 auth.requestMatchers(HttpMethod.PUT, "/api/recipes/**").hasRole("ADMIN")
