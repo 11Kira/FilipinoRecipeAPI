@@ -10,6 +10,7 @@ import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
 import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.models.response.toResponse
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.data.domain.PageRequest
@@ -293,34 +294,4 @@ class RecipeController(
             recipeRepository.deleteById(id)
         }
     }
-
-    /*@PostMapping("/{id}")
-    fun addToFavoriteRecipes(@PathVariable("id") id: String) {
-        recipeRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Recipe not found with id: $id")
-        }.apply {
-            recipeRepository.deleteById(id)
-        }
-    }*/
 }
-
-private fun Recipe.toResponse(): RecipeResponse =
-    RecipeResponse(
-        id = this.id ?: "",
-        title = title,
-        description = description,
-        image = image,
-        estimatedMinutes = estimatedMinutes,
-        difficulty = difficulty,
-        category = category,
-        protein = protein,
-        mealTime = mealTime,
-        ingredients = ingredients,
-        steps = steps,
-        cookingTips = cookingTips,
-        variations = variations,
-        servingSuggestions = servingSuggestions,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        published = published
-    )
