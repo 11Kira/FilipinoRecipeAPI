@@ -10,10 +10,10 @@ data class User(
     @Id
     val id: String? = null,
 
-    @Indexed(unique = true) // This tells Spring to handle the unique index for you
+    @Indexed(unique = true)
     val username: String,
     val email: String,
     val hashedPassword: String,
-    val roles: Role = Role.ROLE_ADMIN,
+    val role: Role,
     val favoriteRecipeIds: List<String> = emptyList()
 )

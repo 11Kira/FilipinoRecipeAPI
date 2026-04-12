@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -15,25 +16,36 @@ class JwtService(
     private val accessTokenValidityMs = 15L * 60L * 1000L
     val refreshTokenValidityMs = 30L * 24 * 60 * 60 * 1000L
 
-    private fun generateToken(
-        userId: String,
-        type: String,
-        expiry: Long
-    ): String {
+    fun generateAccessToken(userId: String, role: String): String {
         val now = Date()
-        val expiryDate = Date(now.time + expiry)
+        val expiryDate = Date(now.time + accessTokenValidityMs)
         return Jwts.builder()
             .subject(userId)
-            .claim("type", type)
+            .claim("type", "access")
+            .claim("role", role) // Add the role to the claims
             .issuedAt(now)
             .expiration(expiryDate)
             .signWith(secretKey, Jwts.SIG.HS256)
             .compact()
     }
 
-    fun generateAccessToken(userId: String): String = generateToken(userId, "access", accessTokenValidityMs)
+    fun generateRefreshToken(userId: String): String {
+        val now = Date()
+        val expiryDate = Date(now.time + accessTokenValidityMs)
+        return Jwts.builder()
+            .subject(userId)
+            .claim("type", "refresh")
+            .issuedAt(now)
+            .expiration(expiryDate)
+            .signWith(secretKey, Jwts.SIG.HS256)
+            .compact()
+    }
 
-    fun generateRefreshToken(userId: String): String = generateToken(userId, "refresh", refreshTokenValidityMs)
+    fun getAuthoritiesFromToken(token: String): List<SimpleGrantedAuthority> {
+        val claims = parseAllClaims(token) ?: throw IllegalArgumentException("Invalid token.")
+        val role = claims["role"] as? String ?: ""
+        return listOf(SimpleGrantedAuthority("ROLE_$role"))
+    }
 
     fun validateAccessToken(token: String): Boolean {
         val claims = parseAllClaims(token) ?: return false

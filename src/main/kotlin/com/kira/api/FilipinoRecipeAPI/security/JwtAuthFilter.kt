@@ -20,9 +20,17 @@ class JwtAuthFilter(
         // Bearer <token>
         val authHeader = request.getHeader("Authorization")
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            if (jwtService.validateAccessToken(authHeader)) {
-                val userId = jwtService.getUserIdFromToken(authHeader)
-                val auth = UsernamePasswordAuthenticationToken(userId, null)
+            val token = authHeader.substring(7) // Clean the prefix
+            if (jwtService.validateAccessToken(token)) {
+                val userId = jwtService.getUserIdFromToken(token)
+
+                val authorities = jwtService.getAuthoritiesFromToken(token)
+
+                val auth = UsernamePasswordAuthenticationToken(
+                    userId,
+                    null,
+                    authorities
+                )
                 SecurityContextHolder.getContext().authentication = auth
             }
         }
