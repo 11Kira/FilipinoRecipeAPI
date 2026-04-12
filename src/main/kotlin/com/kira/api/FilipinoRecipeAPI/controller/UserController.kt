@@ -73,7 +73,7 @@ class UserController(
                     page = page,
                     size = size,
                     total = recipesPage.totalElements,
-                    next = if (recipesPage.hasNext()) "..." else null, // Simplified for brevity
+                    next = if (recipesPage.hasNext()) "..." else null,
                     previous = if (recipesPage.hasPrevious()) "..." else null
                 )
             )
