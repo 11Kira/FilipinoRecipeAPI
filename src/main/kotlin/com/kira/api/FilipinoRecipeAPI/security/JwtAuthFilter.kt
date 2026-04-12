@@ -17,22 +17,23 @@ class JwtAuthFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        // Bearer <token>
         val authHeader = request.getHeader("Authorization")
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            val token = authHeader.substring(7) // Clean the prefix
-            if (jwtService.validateAccessToken(token)) {
-                val userId = jwtService.getUserIdFromToken(token)
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response)
+            return
+        }
+        val token = authHeader.substring(7)
+        if (jwtService.validateAccessToken(token)) {
+            val userId = jwtService.getUserIdFromToken(token)
 
-                val authorities = jwtService.getAuthoritiesFromToken(token)
+            val authorities = jwtService.getAuthoritiesFromToken(token)
 
-                val auth = UsernamePasswordAuthenticationToken(
-                    userId,
-                    null,
-                    authorities
-                )
-                SecurityContextHolder.getContext().authentication = auth
-            }
+            val auth = UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                authorities
+            )
+            SecurityContextHolder.getContext().authentication = auth
         }
 
         filterChain.doFilter(request, response)
