@@ -13,6 +13,7 @@ import java.time.Instant
 data class Recipe(
     @Id
     val id: String? = null,
+    val ownerId: String,
     val title: String,
     val description: String = "",
     val image: String,

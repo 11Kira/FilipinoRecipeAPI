@@ -1,7 +1,8 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
-import com.kira.api.FilipinoRecipeAPI.database.repository.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.database.model.User
+import com.kira.api.FilipinoRecipeAPI.database.repository.recipe.RecipeRepository
 import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
 import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
@@ -9,12 +10,14 @@ import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
 import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.models.response.toResponse
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
@@ -135,11 +138,15 @@ class RecipeController(
     }
 
     @PostMapping
-    fun save(
-        @Valid @RequestBody body: RecipeRequest
+    fun saveRecipe(
+        @Valid @RequestBody body: RecipeRequest,
+        authentication: Authentication
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
+
+        val currentUserId = authentication.principal as String
         val recipe = recipeRepository.save(
             Recipe(
+                ownerId = currentUserId,
                 title = body.title,
                 description = body.description,
                 image = body.image,
@@ -171,11 +178,15 @@ class RecipeController(
     @PatchMapping("/{id}")
     fun patchRecipeById(
         @PathVariable id: String,
-        @RequestBody body: RecipePatchRequest
+        @RequestBody body: RecipePatchRequest,
+        authentication: Authentication
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val currentUser = authentication.principal as User
         val existingRecipe =
             recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
-
+        if (existingRecipe.ownerId != currentUser.id) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this recipe")
+        }
         if (
             body.title == null &&
             body.description == null &&
@@ -238,10 +249,15 @@ class RecipeController(
     @PutMapping("/{id}")
     fun updateRecipeById(
         @PathVariable id: String,
-        @Valid @RequestBody body: RecipeRequest
+        @Valid @RequestBody body: RecipeRequest,
+        authentication: Authentication
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val currentUser = authentication.principal as User
         val existingRecipe =
             recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
+        if (existingRecipe.ownerId != currentUser.id) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this recipe")
+        }
         val updatedRecipe = existingRecipe.copy(
             title = body.title,
             description = body.description,
@@ -279,24 +295,3 @@ class RecipeController(
         }
     }
 }
-
-private fun Recipe.toResponse(): RecipeResponse =
-    RecipeResponse(
-        id = this.id ?: "",
-        title = title,
-        description = description,
-        image = image,
-        estimatedMinutes = estimatedMinutes,
-        difficulty = difficulty,
-        category = category,
-        protein = protein,
-        mealTime = mealTime,
-        ingredients = ingredients,
-        steps = steps,
-        cookingTips = cookingTips,
-        variations = variations,
-        servingSuggestions = servingSuggestions,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        published = published
-    )
