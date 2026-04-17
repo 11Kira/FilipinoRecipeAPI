@@ -14,7 +14,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class SecurityConfig(
     private val jwtAuthFilter: JwtAuthFilter
 ) {
-
     @Bean
     fun filterChain(
         httpSecurity: HttpSecurity
@@ -23,13 +22,17 @@ class SecurityConfig(
             .csrf { csrf -> csrf.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
+                // Public
                 auth.requestMatchers("/api/auth/**").permitAll()
-                auth.requestMatchers(HttpMethod.POST, "/api/users/favorites/**").authenticated()
                 auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
-                auth.requestMatchers(HttpMethod.POST, "/api/recipes/**").hasRole("ADMIN")
-                auth.requestMatchers(HttpMethod.PUT, "/api/recipes/**").hasRole("ADMIN")
-                auth.requestMatchers(HttpMethod.PATCH, "/api/recipes/**").hasRole("ADMIN")
-                auth.requestMatchers(HttpMethod.DELETE, "/api/recipes/**").hasRole("ADMIN")
+
+                // Needs authentication
+                auth.requestMatchers("/api/users/**").authenticated()
+
+                // Admin only
+                auth.requestMatchers("/api/recipes/**").hasRole("ADMIN")
+
+                // Else
                 auth.anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
