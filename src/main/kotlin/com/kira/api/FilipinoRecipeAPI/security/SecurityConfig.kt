@@ -24,9 +24,9 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 // Public
                 auth.requestMatchers("/api/auth/**").permitAll()
-                auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
 
                 // Needs authentication
+                auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").authenticated()
                 auth.requestMatchers("/api/users/**").authenticated()
 
                 // Admin only

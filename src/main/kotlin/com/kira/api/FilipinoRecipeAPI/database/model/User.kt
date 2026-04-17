@@ -15,5 +15,5 @@ data class User(
     val email: String,
     val hashedPassword: String,
     val role: Role,
-    val favoriteRecipeIds: List<String> = emptyList()
+    val favoriteRecipeIds: List<String>? = emptyList()
 )

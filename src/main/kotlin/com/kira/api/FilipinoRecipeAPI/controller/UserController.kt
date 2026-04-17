@@ -56,6 +56,7 @@ class UserController(
 
     @GetMapping("/favorites")
     fun getFavoriteRecipes(
+        @RequestParam(required = false) query: String?,
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
         authentication: Authentication
@@ -64,12 +65,8 @@ class UserController(
         val currentUserId = authentication.principal as String
         val user = userRepository.findById(currentUserId)
             .orElseThrow { ResourceNotFoundException("User not found") }
-
         val pageable = PageRequest.of(page - 1, size)
-
-        // Ensure your RecipeRepository has: fun findAllByIdIn(ids: List<String>, pageable: Pageable): Page<Recipe>
         val recipesPage = recipeRepository.findAllByIdIn(user.favoriteRecipeIds, pageable)
-
         val data = recipesPage.content.map { it.toResponse() }
 
         return ResponseEntity.ok(
