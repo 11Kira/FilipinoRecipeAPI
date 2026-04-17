@@ -2,7 +2,7 @@ package com.kira.api.FilipinoRecipeAPI.models.response
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
 
-fun Recipe.toResponse(): RecipeResponse =
+fun Recipe.toResponse(isFavorited: Boolean = false): RecipeResponse =
     RecipeResponse(
         id = this.id ?: "",
         title = title,
@@ -18,6 +18,7 @@ fun Recipe.toResponse(): RecipeResponse =
         cookingTips = cookingTips,
         variations = variations,
         servingSuggestions = servingSuggestions,
+        isFavorited = isFavorited,
         createdAt = createdAt,
         updatedAt = updatedAt,
         published = published

@@ -9,7 +9,7 @@ interface RecipeRepository : MongoRepository<Recipe, String>, RecipeCustomReposi
     override fun findAll(pageable: Pageable): Page<Recipe>
 
     // Fetches all recipes whose ID exists in the provided list
-    fun findAllByIdIn(ids: List<String>, pageable: Pageable): Page<Recipe>
+    fun findAllByIdIn(ids: List<String>?, pageable: Pageable): Page<Recipe>
 
     fun findByTitleContainingIgnoreCase(
         title: String,

@@ -1,16 +1,12 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
-import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
-import com.kira.api.FilipinoRecipeAPI.database.model.User
-import com.kira.api.FilipinoRecipeAPI.database.repository.recipe.RecipeRepository
 import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
-import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
 import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.toResponse
+import com.kira.api.FilipinoRecipeAPI.service.RecipeService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.data.domain.PageRequest
@@ -19,13 +15,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.server.ResponseStatusException
-import java.time.Instant
 
 @RestController
 @RequestMapping("/api/recipes")
 class RecipeController(
-    private val recipeRepository: RecipeRepository
+    private val recipeService: RecipeService
 ) {
     @GetMapping
     fun getAllRecipes(
@@ -37,104 +31,58 @@ class RecipeController(
         @RequestParam(required = false) difficulty: String?,
         @RequestParam(required = false) maxCookingTime: Int?,
         @RequestParam(defaultValue = "createdAt,desc") sort: String,
+        authentication: Authentication,
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
-
+        val userId = authentication.principal.toString()
         return runCatching {
-            val categoryList: List<String>? = category
-                ?.split(",")
-                ?.map { it.trim().uppercase() }
-                ?.filter { it.isNotBlank() }
-                ?.takeIf { it.isNotEmpty() }
-            val proteinList: List<String>? = protein
-                ?.split(",")
-                ?.map { it.trim().uppercase() }
-                ?.filter { it.isNotBlank() }
-                ?.takeIf { it.isNotEmpty() }
-            val difficultyList: List<String>? = difficulty
-                ?.split(",")
-                ?.map { it.trim().uppercase() }
-                ?.filter { it.isNotBlank() }
-                ?.takeIf { it.isNotEmpty() }
+            val categoryList = category?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
+            val proteinList = protein?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
+            val difficultyList = difficulty?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
 
             val sortParts = sort.split(",")
-            val direction = if (sortParts[1].equals("desc", true))
-                Sort.Direction.DESC else Sort.Direction.ASC
-
             val pageable = PageRequest.of(
-                page - 1,
-                size,
-                Sort.by(direction, sortParts[0])
+                page - 1, size, Sort.by(
+                    if (sortParts[1].equals("desc", true)) Sort.Direction.DESC else Sort.Direction.ASC,
+                    sortParts[0]
+                )
             )
 
-            val pageResult = recipeRepository.searchRecipes(
-                query = query,
-                categoryList = categoryList,
-                proteinList = proteinList,
-                difficultyList = difficultyList,
-                maxCookingTime = maxCookingTime,
-                pageable = pageable
+            val pageResult = recipeService.getAllRecipes(
+                pageable, query, categoryList, proteinList, difficultyList, maxCookingTime, userId
             )
 
-            val data = pageResult.content.map { it.toResponse() }
             val baseUrl = request.requestURL.toString()
-
-            fun pageUrl(page: Int) =
-                "$baseUrl?page=$page&size=${pageable.pageSize}" +
-                        (if (!query.isNullOrBlank()) "&query=$query" else "")
-
-            val next = if (pageResult.hasNext())
-                pageUrl(pageable.pageNumber + 2)
-            else null
-
-            val previous = if (pageResult.hasPrevious())
-                pageUrl(pageable.pageNumber)
-            else null
+            fun pageUrl(p: Int) = "$baseUrl?page=$p&size=$size" + (if (!query.isNullOrBlank()) "&query=$query" else "")
 
             ResponseEntity.ok(
                 ApiResponse(
                     status = ResponseStatus.SUCCESS,
-                    message = if (query.isNullOrBlank())
-                        "Recipes retrieved successfully"
-                    else
-                        "Search results retrieved successfully",
-                    data = data,
+                    message = "Recipes retrieved successfully",
+                    data = pageResult.content,
                     paging = PagingResponse(
-                        page = pageable.pageNumber + 1,
-                        size = pageable.pageSize,
+                        page = page,
+                        size = size,
                         total = pageResult.totalElements,
-                        next = next,
-                        previous = previous
+                        next = if (pageResult.hasNext()) pageUrl(page + 1) else null,
+                        previous = if (pageResult.hasPrevious()) pageUrl(page - 1) else null
                     )
                 )
             )
-
-        }.getOrElse { exception ->
-            ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(
-                    ApiResponse(
-                        status = ResponseStatus.FAILED,
-                        message = exception.message ?: "Failed to retrieve recipes",
-                        data = null,
-                        paging = null
-                    )
-                )
+        }.getOrElse {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse(status = ResponseStatus.FAILED, data = null, message = it.message ?: "Error"))
         }
     }
 
     @GetMapping("/{id}")
-    fun getRecipeById(@PathVariable("id") id: String): ResponseEntity<ApiResponse<RecipeResponse>> {
-        val recipe =
-            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
-        return ResponseEntity.ok(
-            ApiResponse(
-                status = ResponseStatus.SUCCESS,
-                message = "Recipe retrieved successfully",
-                data = recipe.toResponse(),
-                paging = null
-            )
-        )
+    fun getRecipeById(
+        @PathVariable("id") id: String,
+        authentication: Authentication
+    ): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val userId = authentication.principal.toString()
+        val data = recipeService.getRecipeById(id, userId)
+        return ResponseEntity.ok(ApiResponse(ResponseStatus.SUCCESS, "Recipe retrieved", data))
     }
 
     @PostMapping
@@ -142,156 +90,61 @@ class RecipeController(
         @Valid @RequestBody body: RecipeRequest,
         authentication: Authentication
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val userId = authentication.principal.toString()
+        val data = recipeService.saveRecipe(body, userId)
+        return ResponseEntity.ok(ApiResponse(ResponseStatus.SUCCESS, "Recipe created", data))
+    }
 
-        val currentUserId = authentication.principal as String
-        val recipe = recipeRepository.save(
-            Recipe(
-                ownerId = currentUserId,
-                title = body.title,
-                description = body.description,
-                image = body.image,
-                estimatedMinutes = body.estimatedMinutes,
-                difficulty = body.difficulty,
-                category = body.category,
-                protein = body.protein,
-                mealTime = body.mealTime,
-                ingredients = body.ingredients,
-                steps = body.steps,
-                cookingTips = body.cookingTips,
-                variations = body.variations,
-                servingSuggestions = body.servingSuggestions,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-                published = true
-            )
-        )
+    @PutMapping("/{id}")
+    fun updateRecipe(
+        @PathVariable id: String,
+        @Valid @RequestBody body: RecipeRequest,
+        authentication: Authentication
+    ): ResponseEntity<ApiResponse<RecipeResponse>> {
+        val userId = authentication.principal.toString()
+        val data = recipeService.updateRecipe(id, body, userId)
+
         return ResponseEntity.ok(
             ApiResponse(
                 status = ResponseStatus.SUCCESS,
-                message = "Recipe created successfully",
-                data = recipe.toResponse(),
-                paging = null
+                message = "Recipe updated successfully",
+                data = data
             )
         )
     }
 
     @PatchMapping("/{id}")
-    fun patchRecipeById(
+    fun patchRecipe(
         @PathVariable id: String,
         @RequestBody body: RecipePatchRequest,
         authentication: Authentication
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
-        val currentUser = authentication.principal as User
-        val existingRecipe =
-            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
-        if (existingRecipe.ownerId != currentUser.id) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this recipe")
-        }
-        if (
-            body.title == null &&
-            body.description == null &&
-            body.image == null &&
-            body.estimatedMinutes == null &&
-            body.difficulty == null &&
-            body.category == null &&
-            body.protein == null &&
-            body.mealTime == null &&
-            body.ingredients == null &&
-            body.steps == null &&
-            body.cookingTips == null &&
-            body.variations == null &&
-            body.servingSuggestions == null
-        ) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "At least one field must be provided for update"
-            )
-        }
+        val userId = authentication.principal.toString()
+        val data = recipeService.patchRecipe(id, body, userId)
 
-        val updatedIngredients = body.ingredients?.let { patch ->
-            existingRecipe.ingredients.copy(
-                main = patch.main ?: existingRecipe.ingredients.main,
-                aromatics = patch.aromatics ?: existingRecipe.ingredients.aromatics,
-                liquidsAndSeasonings = patch.liquidsAndSeasonings ?: existingRecipe.ingredients.liquidsAndSeasonings,
-                vegetables = patch.vegetables ?: existingRecipe.ingredients.vegetables,
-                optionalAddons = patch.optionalAddons ?: existingRecipe.ingredients.optionalAddons
-            )
-        } ?: existingRecipe.ingredients
-
-        val updatedRecipe = existingRecipe.copy(
-            title = body.title ?: existingRecipe.title,
-            description = body.description ?: existingRecipe.description,
-            image = body.image ?: existingRecipe.image,
-            estimatedMinutes = body.estimatedMinutes ?: existingRecipe.estimatedMinutes,
-            difficulty = body.difficulty ?: existingRecipe.difficulty,
-            category = body.category ?: existingRecipe.category,
-            protein = body.protein ?: existingRecipe.protein,
-            mealTime = body.mealTime ?: existingRecipe.mealTime,
-            ingredients = updatedIngredients,
-            steps = body.steps ?: existingRecipe.steps,
-            cookingTips = body.cookingTips ?: existingRecipe.cookingTips,
-            variations = body.variations ?: existingRecipe.variations,
-            servingSuggestions = body.servingSuggestions ?: existingRecipe.servingSuggestions,
-            updatedAt = Instant.now()
-        )
-
-        val savedRecipe = recipeRepository.save(updatedRecipe)
         return ResponseEntity.ok(
             ApiResponse(
                 status = ResponseStatus.SUCCESS,
-                message = "Recipe updated successfully",
-                data = savedRecipe.toResponse(),
-                paging = null
-            )
-        )
-    }
-
-    @PutMapping("/{id}")
-    fun updateRecipeById(
-        @PathVariable id: String,
-        @Valid @RequestBody body: RecipeRequest,
-        authentication: Authentication
-    ): ResponseEntity<ApiResponse<RecipeResponse>> {
-        val currentUser = authentication.principal as User
-        val existingRecipe =
-            recipeRepository.findById(id).orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
-        if (existingRecipe.ownerId != currentUser.id) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this recipe")
-        }
-        val updatedRecipe = existingRecipe.copy(
-            title = body.title,
-            description = body.description,
-            image = body.image,
-            estimatedMinutes = body.estimatedMinutes,
-            difficulty = body.difficulty,
-            category = body.category,
-            protein = body.protein,
-            mealTime = body.mealTime,
-            ingredients = body.ingredients,
-            steps = body.steps,
-            cookingTips = body.cookingTips,
-            variations = body.variations,
-            servingSuggestions = body.servingSuggestions,
-            updatedAt = Instant.now()
-        )
-
-        val savedRecipe = recipeRepository.save(updatedRecipe)
-        return ResponseEntity.ok(
-            ApiResponse(
-                status = ResponseStatus.SUCCESS,
-                message = "Recipe updated successfully",
-                data = savedRecipe.toResponse(),
-                paging = null
+                message = "Recipe patched successfully",
+                data = data
             )
         )
     }
 
     @DeleteMapping("/{id}")
-    fun deleteRecipeById(@PathVariable("id") id: String) {
-        recipeRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Recipe not found with id: $id")
-        }.apply {
-            recipeRepository.deleteById(id)
-        }
+    fun deleteRecipe(
+        @PathVariable id: String,
+        authentication: Authentication
+    ): ResponseEntity<ApiResponse<Unit>> {
+        val userId = authentication.principal.toString()
+        recipeService.deleteRecipe(id, userId)
+
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = ResponseStatus.SUCCESS,
+                message = "Recipe deleted successfully",
+                data = null
+            )
+        )
     }
 }

@@ -22,6 +22,7 @@ data class RecipeResponse(
     val cookingTips: List<String> = emptyList(),
     val variations: List<String> = emptyList(),
     val servingSuggestions: List<String> = emptyList(),
+    val isFavorited: Boolean = false,
     val createdAt: Instant,
     val updatedAt: Instant,
     val published: Boolean
