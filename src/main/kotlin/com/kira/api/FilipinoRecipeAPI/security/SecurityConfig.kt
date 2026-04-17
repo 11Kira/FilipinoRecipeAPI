@@ -19,18 +19,21 @@ class SecurityConfig(
         httpSecurity: HttpSecurity
     ): SecurityFilterChain {
         return httpSecurity
-            .csrf { csrf -> csrf.disable() }
+            .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 // Public
                 auth.requestMatchers("/api/auth/**").permitAll()
+                auth.requestMatchers("/error").permitAll()
 
                 // Needs authentication
                 auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").authenticated()
-                auth.requestMatchers("/api/users/**").authenticated()
 
-                // Admin only
+                // Admin only POST/PUT/PATCH/DELETE
                 auth.requestMatchers("/api/recipes/**").hasRole("ADMIN")
+
+                // Needs authentication
+                auth.requestMatchers("/api/users/**").authenticated()
 
                 // Else
                 auth.anyRequest().authenticated()

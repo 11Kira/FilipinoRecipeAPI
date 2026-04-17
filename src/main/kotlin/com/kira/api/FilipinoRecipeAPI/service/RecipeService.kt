@@ -39,7 +39,7 @@ class RecipeService(
         )
 
         val user = userRepository.findById(userId).orElseThrow { ResourceNotFoundException("User not found") }
-        val favoriteIds = user.favoriteRecipeIds ?: emptySet()
+        val favoriteIds = user.favoriteRecipeIds
 
         return pageResult.map { it.toResponse(isFavorited = favoriteIds.contains(it.id)) }
     }
@@ -50,7 +50,7 @@ class RecipeService(
         val user = userRepository.findById(userId)
             .orElseThrow { ResourceNotFoundException("User not found") }
 
-        val isFavorited = user.favoriteRecipeIds?.contains(recipeId) ?: false
+        val isFavorited = user.favoriteRecipeIds.contains(recipeId) ?: false
 
         return recipe.toResponse(isFavorited = isFavorited)
     }
