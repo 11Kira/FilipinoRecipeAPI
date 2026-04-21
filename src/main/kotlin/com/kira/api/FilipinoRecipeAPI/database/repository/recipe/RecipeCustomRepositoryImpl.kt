@@ -18,10 +18,15 @@ class RecipeCustomRepositoryImpl(
         proteinList: List<String>?, // accept list
         difficultyList: List<String>?,
         maxCookingTime: Int?,
-        pageable: Pageable
+        pageable: Pageable,
+        recipeIds: List<String>?
     ): Page<Recipe> {
 
         val criteriaList = mutableListOf<Criteria>()
+
+        recipeIds?.takeIf { it.isNotEmpty() }?.let { ids ->
+            criteriaList.add(Criteria.where("_id").`in`(ids))
+        }
 
         query?.takeIf { it.isNotBlank() }?.let { q ->
             val regex = Regex.escape(q)

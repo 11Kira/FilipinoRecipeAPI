@@ -21,14 +21,17 @@ class RecipeService(
     private val userRepository: UserRepository
 ) {
     fun getAllRecipes(
-        pageable: PageRequest,
+        userId: String,
         query: String?,
         categoryList: List<String>?,
         proteinList: List<String>?,
         difficultyList: List<String>?,
         maxCookingTime: Int?,
-        userId: String
+        pageable: PageRequest,
     ): Page<RecipeResponse> {
+        val user = userRepository.findById(userId).orElseThrow { ResourceNotFoundException("User not found") }
+        val favoriteIds = user.favoriteRecipeIds
+
         val pageResult = recipeRepository.searchRecipes(
             query = query,
             categoryList = categoryList,
@@ -38,10 +41,51 @@ class RecipeService(
             pageable = pageable,
         )
 
+        return pageResult.map { it.toResponse(isFavorited = favoriteIds.contains(it.id)) }
+    }
+
+    fun toggleFavorite(recipeId: String, userId: String): String {
+        val user = userRepository.findById(userId)
+            .orElseThrow { ResourceNotFoundException("User not found") }
+
+        if (!recipeRepository.existsById(recipeId)) {
+            throw ResourceNotFoundException("Recipe not found with id: $recipeId")
+        }
+
+        val updatedFavorites = user.favoriteRecipeIds.toMutableSet() // Use Set to avoid duplicates
+        val isRemoving = updatedFavorites.contains(recipeId)
+
+        if (isRemoving) {
+            updatedFavorites.remove(recipeId)
+        } else {
+            updatedFavorites.add(recipeId)
+        }
+
+        userRepository.save(user.copy(favoriteRecipeIds = updatedFavorites.toList()))
+
+        return if (isRemoving) "Recipe removed from favorites" else "Recipe added to favorites"
+    }
+
+    fun getFavoriteRecipes(
+        userId: String,
+        query: String?,
+        pageable: PageRequest,
+    ): Page<RecipeResponse> {
         val user = userRepository.findById(userId).orElseThrow { ResourceNotFoundException("User not found") }
         val favoriteIds = user.favoriteRecipeIds
+        if (favoriteIds.isEmpty()) return Page.empty(pageable)
 
-        return pageResult.map { it.toResponse(isFavorited = favoriteIds.contains(it.id)) }
+        val pageResult = recipeRepository.searchRecipes(
+            query = query,
+            categoryList = null,
+            proteinList = null,
+            difficultyList = null,
+            maxCookingTime = null,
+            pageable = pageable,
+            recipeIds = favoriteIds
+        )
+
+        return pageResult.map { it.toResponse(isFavorited = true) }
     }
 
     fun getRecipeById(recipeId: String, userId: String): RecipeResponse {
@@ -100,7 +144,8 @@ class RecipeService(
             cookingTips = body.cookingTips,
             variations = body.variations,
             servingSuggestions = body.servingSuggestions,
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
+            createdAt = existingRecipe.createdAt
         )
 
         return recipeRepository.save(updatedRecipe).toResponse(isFavorited = false)
@@ -139,7 +184,8 @@ class RecipeService(
             cookingTips = body.cookingTips ?: existingRecipe.cookingTips,
             variations = body.variations ?: existingRecipe.variations,
             servingSuggestions = body.servingSuggestions ?: existingRecipe.servingSuggestions,
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
+            createdAt = existingRecipe.createdAt
         )
 
         return recipeRepository.save(updatedRecipe).toResponse(isFavorited = false)
