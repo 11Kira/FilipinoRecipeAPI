@@ -49,7 +49,7 @@ class RecipeController(
             )
 
             val pageResult = recipeService.getAllRecipes(
-                pageable, query, categoryList, proteinList, difficultyList, maxCookingTime, userId
+                userId, query, categoryList, proteinList, difficultyList, maxCookingTime, pageable,
             )
 
             val baseUrl = request.requestURL.toString()

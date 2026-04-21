@@ -8,9 +8,10 @@ interface RecipeCustomRepository {
     fun searchRecipes(
         query: String?,
         categoryList: List<String>?,
-        proteinList: List<String>?, // accept list
+        proteinList: List<String>?,
         difficultyList: List<String>?,
         maxCookingTime: Int?,
-        pageable: Pageable
+        pageable: Pageable,
+        recipeIds: List<String>? = null,
     ): Page<Recipe>
 }
