@@ -7,7 +7,7 @@ import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
 import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.toResponse
+import com.kira.api.FilipinoRecipeAPI.models.response.mapper.toResponse
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
