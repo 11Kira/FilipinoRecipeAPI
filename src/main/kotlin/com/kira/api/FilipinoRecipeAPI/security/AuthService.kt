@@ -110,4 +110,10 @@ class AuthService(
         val hashBytes = digest.digest(token.encodeToByteArray())
         return Base64.getEncoder().encodeToString(hashBytes)
     }
+
+    @Transactional
+    fun revokeToken(rawRefreshToken: String) {
+        val hashedToken = hashToken(rawRefreshToken)
+        refreshTokenRepository.deleteByHashedToken(hashedToken)
+    }
 }

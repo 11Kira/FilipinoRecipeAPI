@@ -1,6 +1,7 @@
-package com.kira.api.FilipinoRecipeAPI.models.response
+package com.kira.api.FilipinoRecipeAPI.models.response.mapper
 
 import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
+import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 
 fun Recipe.toResponse(isFavorited: Boolean = false): RecipeResponse =
     RecipeResponse(

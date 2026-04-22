@@ -4,7 +4,9 @@ import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
 import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.models.response.UserResponse
 import com.kira.api.FilipinoRecipeAPI.service.RecipeService
+import com.kira.api.FilipinoRecipeAPI.service.UserService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
@@ -14,7 +16,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/users")
 class UserController(
-    private val recipeService: RecipeService
+    private val recipeService: RecipeService,
+    private val userService: UserService
 ) {
     @PostMapping("/favorites/{recipeId}")
     fun toggleFavorite(
@@ -30,6 +33,22 @@ class UserController(
                 status = ResponseStatus.SUCCESS,
                 message = message,
                 data = null
+            )
+        )
+    }
+
+    @GetMapping("/profile")
+    fun getUserProfile(
+        authentication: Authentication
+    ): ResponseEntity<ApiResponse<UserResponse>> {
+        val userId = authentication.principal as String
+
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = ResponseStatus.SUCCESS,
+                message = "User profile retrieved successfully",
+                data = userService.getUser(userId),
+                paging = null
             )
         )
     }
