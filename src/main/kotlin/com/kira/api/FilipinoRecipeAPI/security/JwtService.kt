@@ -31,7 +31,7 @@ class JwtService(
 
     fun generateRefreshToken(userId: String): String {
         val now = Date()
-        val expiryDate = Date(now.time + accessTokenValidityMs)
+        val expiryDate = Date(now.time + refreshTokenValidityMs)
         return Jwts.builder()
             .subject(userId)
             .claim("type", "refresh")
