@@ -90,6 +90,7 @@ class AuthService(
     }
 
     private fun storeRefreshToken(userId: String, rawRefreshToken: String) {
+        refreshTokenRepository.deleteByUserId(userId)
         val hashed = hashToken(rawRefreshToken)
         val expiryMs = jwtService.refreshTokenValidityMs
         val expiresAt = Instant.now().plusMillis(expiryMs)
@@ -98,6 +99,7 @@ class AuthService(
             RefreshToken(
                 userId = userId,
                 expiresAt = expiresAt,
+                createdAt = Instant.now(),
                 hashedToken = hashed
             )
         )
