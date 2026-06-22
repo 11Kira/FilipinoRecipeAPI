@@ -7,7 +7,6 @@ import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 import com.kira.api.FilipinoRecipeAPI.service.RecipeService
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -29,7 +28,6 @@ class RecipeController(
         @RequestParam(required = false) maxCookingTime: Int?,
         @RequestParam(defaultValue = "createdAt,desc") sort: String,
         authentication: Authentication,
-        request: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
         val userId = authentication.principal.toString()
 
@@ -45,9 +43,6 @@ class RecipeController(
             sort = sort
         )
 
-        val baseUrl = request.requestURL.toString()
-        fun pageUrl(p: Int) = "$baseUrl?page=$p&size=$size" + (if (!query.isNullOrBlank()) "&query=$query" else "")
-
         return ResponseEntity.ok(
             ApiResponse(
                 status = ResponseStatus.SUCCESS,
@@ -56,9 +51,9 @@ class RecipeController(
                 paging = PagingResponse(
                     page = page,
                     size = size,
-                    total = pageResult.totalElements,
-                    next = if (pageResult.hasNext()) pageUrl(page + 1) else null,
-                    previous = if (pageResult.hasPrevious()) pageUrl(page - 1) else null
+                    totalPages = pageResult.totalPages,
+                    totalElements = pageResult.totalElements,
+                    hasNext = pageResult.hasNext()
                 )
             )
         )
