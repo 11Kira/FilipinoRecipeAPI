@@ -7,11 +7,7 @@ import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 import com.kira.api.FilipinoRecipeAPI.service.RecipeService
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
@@ -32,47 +28,35 @@ class RecipeController(
         @RequestParam(required = false) maxCookingTime: Int?,
         @RequestParam(defaultValue = "createdAt,desc") sort: String,
         authentication: Authentication,
-        request: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
         val userId = authentication.principal.toString()
-        return runCatching {
-            val categoryList = category?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
-            val proteinList = protein?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
-            val difficultyList = difficulty?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
 
-            val sortParts = sort.split(",")
-            val pageable = PageRequest.of(
-                page - 1, size, Sort.by(
-                    if (sortParts[1].equals("desc", true)) Sort.Direction.DESC else Sort.Direction.ASC,
-                    sortParts[0]
+        val pageResult = recipeService.getAllRecipes(
+            userId = userId,
+            query = query,
+            category = category,
+            protein = protein,
+            difficulty = difficulty,
+            maxCookingTime = maxCookingTime,
+            page = page,
+            size = size,
+            sort = sort
+        )
+
+        return ResponseEntity.ok(
+            ApiResponse(
+                status = ResponseStatus.SUCCESS,
+                message = "Recipes retrieved successfully",
+                data = pageResult.content,
+                paging = PagingResponse(
+                    page = page,
+                    size = size,
+                    totalPages = pageResult.totalPages,
+                    totalElements = pageResult.totalElements,
+                    hasNext = pageResult.hasNext()
                 )
             )
-
-            val pageResult = recipeService.getAllRecipes(
-                userId, query, categoryList, proteinList, difficultyList, maxCookingTime, pageable,
-            )
-
-            val baseUrl = request.requestURL.toString()
-            fun pageUrl(p: Int) = "$baseUrl?page=$p&size=$size" + (if (!query.isNullOrBlank()) "&query=$query" else "")
-
-            ResponseEntity.ok(
-                ApiResponse(
-                    status = ResponseStatus.SUCCESS,
-                    message = "Recipes retrieved successfully",
-                    data = pageResult.content,
-                    paging = PagingResponse(
-                        page = page,
-                        size = size,
-                        total = pageResult.totalElements,
-                        next = if (pageResult.hasNext()) pageUrl(page + 1) else null,
-                        previous = if (pageResult.hasPrevious()) pageUrl(page - 1) else null
-                    )
-                )
-            )
-        }.getOrElse {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse(status = ResponseStatus.FAILED, data = null, message = it.message ?: "Error"))
-        }
+        )
     }
 
     @GetMapping("/{id}")

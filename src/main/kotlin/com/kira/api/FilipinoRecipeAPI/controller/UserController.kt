@@ -7,7 +7,6 @@ import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.UserResponse
 import com.kira.api.FilipinoRecipeAPI.service.RecipeService
 import com.kira.api.FilipinoRecipeAPI.service.UserService
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -59,15 +58,11 @@ class UserController(
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(required = false) query: String?,
         authentication: Authentication,
-        request: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
 
         val userId = authentication.principal as String
         val pageable = PageRequest.of(page - 1, size)
         val pageResult = recipeService.getFavoriteRecipes(userId, query, pageable)
-
-        val baseUrl = request.requestURL.toString()
-        fun pageUrl(p: Int) = "$baseUrl?page=$p&size=$size" + (if (!query.isNullOrBlank()) "&query=$query" else "")
 
         return ResponseEntity.ok(
             ApiResponse(
@@ -77,9 +72,9 @@ class UserController(
                 paging = PagingResponse(
                     page = page,
                     size = size,
-                    total = pageResult.totalElements,
-                    next = if (pageResult.hasNext()) pageUrl(page + 1) else null,
-                    previous = if (pageResult.hasPrevious()) pageUrl(page - 1) else null
+                    totalPages = pageResult.totalPages,
+                    totalElements = pageResult.totalElements,
+                    hasNext = pageResult.hasNext()
                 )
             )
         )
