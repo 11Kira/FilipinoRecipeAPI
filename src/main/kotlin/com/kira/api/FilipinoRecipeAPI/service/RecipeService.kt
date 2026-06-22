@@ -10,6 +10,7 @@ import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
 import com.kira.api.FilipinoRecipeAPI.models.response.mapper.toResponse
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -23,14 +24,25 @@ class RecipeService(
     fun getAllRecipes(
         userId: String,
         query: String?,
-        categoryList: List<String>?,
-        proteinList: List<String>?,
-        difficultyList: List<String>?,
+        category: String?,
+        protein: String?,
+        difficulty: String?,
         maxCookingTime: Int?,
-        pageable: PageRequest,
+        page: Int,
+        size: Int,
+        sort: String
     ): Page<RecipeResponse> {
         val user = userRepository.findById(userId).orElseThrow { ResourceNotFoundException("User not found") }
         val favoriteIds = user.favoriteRecipeIds
+
+        val categoryList = category?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
+        val proteinList = protein?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
+        val difficultyList = difficulty?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
+
+        val sortParts = sort.split(",")
+        val sortDirection = if (sortParts.getOrNull(1).equals("desc", true)) Sort.Direction.DESC else Sort.Direction.ASC
+        val sortBy = sortParts.getOrNull(0) ?: "createdAt"
+        val pageable = PageRequest.of(page - 1, size, Sort.by(sortDirection, sortBy))
 
         val pageResult = recipeRepository.searchRecipes(
             query = query,

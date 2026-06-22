@@ -5,6 +5,7 @@ import com.kira.api.FilipinoRecipeAPI.database.model.User
 import com.kira.api.FilipinoRecipeAPI.database.repository.token.RefreshTokenRepository
 import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
 import com.kira.api.FilipinoRecipeAPI.models.enums.Role
+import com.kira.api.FilipinoRecipeAPI.models.exception.UserAlreadyExistsException
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,6 +28,12 @@ class AuthService(
         password: String,
         username: String,
     ): User {
+        if (userRepository.existsByEmail(email)) {
+            throw UserAlreadyExistsException("An account with this email already exists.")
+        }
+        if (userRepository.existsByUsername(email)) {
+            throw UserAlreadyExistsException("This username is already taken.")
+        }
         return userRepository.save(
             User(
                 email = email,
