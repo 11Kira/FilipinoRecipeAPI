@@ -104,14 +104,16 @@ class RecipeService(
         return pageResult.map { it.toResponse(isFavorited = true) }
     }
 
-    fun getRecipeById(recipeId: String, userId: String): RecipeResponse {
+    fun getRecipeById(recipeId: String, userId: String?): RecipeResponse {
         val recipe = recipeRepository.findById(recipeId)
-            .orElseThrow { ResourceNotFoundException("Recipe not found with id: $recipeId") }
-        val user = userRepository.findById(userId)
-            .orElseThrow { ResourceNotFoundException("User not found") }
-
-        val isFavorited = user.favoriteRecipeIds.contains(recipeId) ?: false
-
+            .orElseThrow { Exception("Recipe not found with id: $recipeId") }
+        val isFavorited = if (userId != null) {
+            userRepository.findById(userId)
+                .map { it.favoriteRecipeIds.contains(recipeId) }
+                .orElse(false)
+        } else {
+            false
+        }
         return recipe.toResponse(isFavorited = isFavorited)
     }
 
