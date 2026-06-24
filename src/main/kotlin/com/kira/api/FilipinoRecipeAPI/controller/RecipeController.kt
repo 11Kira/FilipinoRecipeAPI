@@ -62,9 +62,9 @@ class RecipeController(
     @GetMapping("/{id}")
     fun getRecipeById(
         @PathVariable("id") id: String,
-        authentication: Authentication
+        authentication: Authentication?
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
-        val userId = authentication.principal.toString()
+        val userId: String? = authentication?.principal?.toString()
         val data = recipeService.getRecipeById(id, userId)
         return ResponseEntity.ok(ApiResponse(ResponseStatus.SUCCESS, "Recipe retrieved", data))
     }
