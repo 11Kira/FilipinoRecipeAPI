@@ -22,20 +22,19 @@ class SecurityConfig(
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
-                // Public
+                // Public: Everyone can view recipes
                 auth.requestMatchers("/api/auth/**").permitAll()
                 auth.requestMatchers("/error").permitAll()
+                auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
 
-                // Needs authentication
-                auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").authenticated()
+                // Admin only for modifications
+                auth.requestMatchers(HttpMethod.POST, "/api/recipes/**").hasRole("ADMIN")
+                auth.requestMatchers(HttpMethod.PUT, "/api/recipes/**").hasRole("ADMIN")
+                auth.requestMatchers(HttpMethod.PATCH, "/api/recipes/**").hasRole("ADMIN")
+                auth.requestMatchers(HttpMethod.DELETE, "/api/recipes/**").hasRole("ADMIN")
 
-                // Admin only POST/PUT/PATCH/DELETE
-                auth.requestMatchers("/api/recipes/**").hasRole("ADMIN")
-
-                // Needs authentication
+                // Users and authenticated routes
                 auth.requestMatchers("/api/users/**").authenticated()
-
-                // Else
                 auth.anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)

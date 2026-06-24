@@ -27,9 +27,9 @@ class RecipeController(
         @RequestParam(required = false) difficulty: String?,
         @RequestParam(required = false) maxCookingTime: Int?,
         @RequestParam(defaultValue = "createdAt,desc") sort: String,
-        authentication: Authentication,
+        authentication: Authentication?,
     ): ResponseEntity<ApiResponse<List<RecipeResponse>>> {
-        val userId = authentication.principal.toString()
+        val userId: String? = authentication?.principal?.toString()
 
         val pageResult = recipeService.getAllRecipes(
             userId = userId,

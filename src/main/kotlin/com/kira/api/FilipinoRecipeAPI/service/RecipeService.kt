@@ -22,7 +22,7 @@ class RecipeService(
     private val userRepository: UserRepository
 ) {
     fun getAllRecipes(
-        userId: String,
+        userId: String?,
         query: String?,
         category: String?,
         protein: String?,
@@ -32,9 +32,13 @@ class RecipeService(
         size: Int,
         sort: String
     ): Page<RecipeResponse> {
-        val user = userRepository.findById(userId).orElseThrow { ResourceNotFoundException("User not found") }
-        val favoriteIds = user.favoriteRecipeIds
-
+        val favoriteIds = if (userId != null) {
+            userRepository.findById(userId)
+                .map { it.favoriteRecipeIds }
+                .orElse(emptyList())
+        } else {
+            emptyList() // Guests have no favorites
+        }
         val categoryList = category?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
         val proteinList = protein?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
         val difficultyList = difficulty?.split(",")?.map { it.trim().uppercase() }?.filter { it.isNotBlank() }
