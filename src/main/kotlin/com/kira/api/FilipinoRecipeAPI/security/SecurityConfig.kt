@@ -21,6 +21,14 @@ class SecurityConfig(
         return httpSecurity
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .exceptionHandling { exception ->
+                exception.authenticationEntryPoint { request, response, authException ->
+                    response.sendError(
+                        jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED,
+                        authException.message
+                    )
+                }
+            }
             .authorizeHttpRequests { auth ->
                 // Public: Everyone can view recipes
                 auth.requestMatchers("/api/auth/**").permitAll()
