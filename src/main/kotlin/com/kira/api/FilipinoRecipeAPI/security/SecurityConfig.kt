@@ -31,18 +31,18 @@ class SecurityConfig(
             }
             .authorizeHttpRequests { auth ->
                 // Public: Everyone can view recipes
-                auth.requestMatchers("/api/auth/**").permitAll()
+                auth.requestMatchers("/v1/auth/**").permitAll()
                 auth.requestMatchers("/error").permitAll()
-                auth.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
+                auth.requestMatchers(HttpMethod.GET, "/v1/recipes/**").permitAll()
 
                 // Admin only for modifications
-                auth.requestMatchers(HttpMethod.POST, "/api/recipes/**").hasRole("ADMIN")
-                auth.requestMatchers(HttpMethod.PUT, "/api/recipes/**").hasRole("ADMIN")
-                auth.requestMatchers(HttpMethod.PATCH, "/api/recipes/**").hasRole("ADMIN")
-                auth.requestMatchers(HttpMethod.DELETE, "/api/recipes/**").hasRole("ADMIN")
+                auth.requestMatchers(HttpMethod.POST, "/v1/recipes/**").hasRole("ADMIN")
+                auth.requestMatchers(HttpMethod.PUT, "/v1/recipes/**").hasRole("ADMIN")
+                auth.requestMatchers(HttpMethod.PATCH, "/v1/recipes/**").hasRole("ADMIN")
+                auth.requestMatchers(HttpMethod.DELETE, "/v1/recipes/**").hasRole("ADMIN")
 
                 // Users and authenticated routes
-                auth.requestMatchers("/api/users/**").authenticated()
+                auth.requestMatchers("/v1/users/**").authenticated()
                 auth.anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
