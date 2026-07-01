@@ -13,7 +13,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/v1/users")
 class UserController(
     private val recipeService: RecipeService,
     private val userService: UserService
