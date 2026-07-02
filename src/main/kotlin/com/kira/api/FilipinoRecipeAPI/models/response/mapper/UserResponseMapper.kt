@@ -8,4 +8,5 @@ fun User.toResponse(): UserResponse =
         id = this.id ?: "",
         username = username,
         email = email,
+        role = role.name
     )
