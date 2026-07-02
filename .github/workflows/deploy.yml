@@ -23,21 +23,23 @@ jobs:
       - name: Grant Execute Permission to Gradle
         run: chmod +x gradlew
 
+      # Let Gradle build its standard file naturally
       - name: Build Production BootJar
         run: ./gradlew bootJar -x test
 
+      # Use pinned versions and look for the standard spring boot jar structure
       - name: Copy Executable Jar to Droplet
-        uses: appleboy/scp-action@master
+        uses: appleboy/scp-action@v1.0.3
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
-          source: "build/libs/*.jar"
+          source: "build/libs/*.jar" # Captures your standard compiled jar safely
           target: "/home/kira/recipe-api-temp"
           strip_components: 2
 
       - name: Execute Remote SSH Commands to Restart App
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER }}
@@ -47,4 +49,5 @@ jobs:
             mv /home/kira/recipe-api-temp/*.jar /home/kira/FilipinoRecipeAPI/build/libs/FilipinoRecipeAPI-0.0.1-SNAPSHOT.jar
             rm -rf /home/kira/recipe-api-temp
             sudo systemctl restart filipino-recipe-api
+            sleep 3
             sudo systemctl status filipino-recipe-api --no-pager | grep "Active:"
