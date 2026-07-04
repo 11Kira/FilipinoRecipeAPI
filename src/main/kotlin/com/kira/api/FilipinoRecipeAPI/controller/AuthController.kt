@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/auth")
 class AuthController(
-    private val authService: AuthService,
+    private val authService: AuthService
 ) {
 
     @PostMapping("/register")
