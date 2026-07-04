@@ -1,15 +1,19 @@
-package com.kira.api.FilipinoRecipeAPI.security
+package com.kira.api.FilipinoRecipeAPI.service
 
 import com.kira.api.FilipinoRecipeAPI.database.model.RefreshToken
 import com.kira.api.FilipinoRecipeAPI.database.model.User
+import com.kira.api.FilipinoRecipeAPI.database.repository.password.PasswordResetOtpRepository
 import com.kira.api.FilipinoRecipeAPI.database.repository.token.RefreshTokenRepository
 import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
 import com.kira.api.FilipinoRecipeAPI.models.enums.Role
 import com.kira.api.FilipinoRecipeAPI.models.exception.UserAlreadyExistsException
+import com.kira.api.FilipinoRecipeAPI.security.HashEncoder
+import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.MessageDigest
+import java.security.SecureRandom
 import java.time.Instant
 import java.util.*
 
@@ -17,11 +21,15 @@ import java.util.*
 class AuthService(
     private val jwtService: JwtService,
     private val userRepository: UserRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val otpRepository: PasswordResetOtpRepository,
     private val hashEncoder: HashEncoder,
-    private val refreshTokenRepository: RefreshTokenRepository
+    private val mailSender: JavaMailSender
 ) {
 
     data class TokenPair(val accessToken: String, val refreshToken: String)
+
+    private val secureRandom = SecureRandom()
 
     fun registerUser(
         email: String,

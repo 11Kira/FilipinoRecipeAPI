@@ -6,7 +6,7 @@ import com.kira.api.FilipinoRecipeAPI.models.requests.LogoutRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.RefreshRequest
 import com.kira.api.FilipinoRecipeAPI.models.requests.RegistrationRequest
 import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
-import com.kira.api.FilipinoRecipeAPI.security.AuthService
+import com.kira.api.FilipinoRecipeAPI.service.AuthService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -16,9 +16,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/auth")
 class AuthController(
-    private val authService: AuthService,
+    private val authService: AuthService
 ) {
-
     @PostMapping("/register")
     fun register(@RequestBody body: RegistrationRequest): ResponseEntity<ApiResponse<Unit>> {
         authService.registerUser(body.email, body.password, body.username)

@@ -1,4 +1,4 @@
-package com.kira.api.FilipinoRecipeAPI.security
+package com.kira.api.FilipinoRecipeAPI.service
 
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
