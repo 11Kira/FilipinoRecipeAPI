@@ -45,8 +45,9 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            mkdir -p /home/kira/FilipinoRecipeAPI/build/libs
-            mv /home/kira/recipe-api-temp/*.jar /home/kira/FilipinoRecipeAPI/build/libs/FilipinoRecipeAPI-0.0.1-SNAPSHOT.jar
+            sudo mkdir -p /opt/filipino-recipe-api
+            sudo chown -R kira:kira /opt/filipino-recipe-api
+            mv /home/kira/recipe-api-temp/*.jar /opt/filipino-recipe-api/filipino-recipe-api-0.0.1-SNAPSHOT.jar
             rm -rf /home/kira/recipe-api-temp
             sudo systemctl restart filipino-recipe-api
             sleep 3
