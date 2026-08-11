@@ -1,10 +1,10 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
-import com.kira.api.FilipinoRecipeAPI.models.requests.ForgotPasswordRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.ResetPasswordRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.VerifyOtpRequest
-import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.OtpVerificationResponse
+import com.kira.api.FilipinoRecipeAPI.model.requests.ForgotPasswordRequest
+import com.kira.api.FilipinoRecipeAPI.model.requests.ResetPasswordRequest
+import com.kira.api.FilipinoRecipeAPI.model.requests.VerifyOtpRequest
+import com.kira.api.FilipinoRecipeAPI.model.response.ApiResponse
+import com.kira.api.FilipinoRecipeAPI.model.response.OtpVerificationResponse
 import com.kira.api.FilipinoRecipeAPI.service.PasswordResetService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

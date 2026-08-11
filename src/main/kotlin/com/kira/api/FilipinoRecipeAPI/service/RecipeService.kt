@@ -1,13 +1,13 @@
 package com.kira.api.FilipinoRecipeAPI.service
 
-import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
-import com.kira.api.FilipinoRecipeAPI.database.repository.recipe.RecipeRepository
-import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
-import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
-import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
-import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.mapper.toResponse
+import com.kira.api.FilipinoRecipeAPI.exception.ResourceNotFoundException
+import com.kira.api.FilipinoRecipeAPI.model.Recipe
+import com.kira.api.FilipinoRecipeAPI.model.requests.RecipeRequest
+import com.kira.api.FilipinoRecipeAPI.model.requests.patch.RecipePatchRequest
+import com.kira.api.FilipinoRecipeAPI.model.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.model.response.mapper.toResponse
+import com.kira.api.FilipinoRecipeAPI.repository.recipe.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort

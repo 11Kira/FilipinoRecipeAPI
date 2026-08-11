@@ -1,12 +1,12 @@
 package com.kira.api.FilipinoRecipeAPI.service
 
-import com.kira.api.FilipinoRecipeAPI.database.model.RefreshToken
-import com.kira.api.FilipinoRecipeAPI.database.model.User
-import com.kira.api.FilipinoRecipeAPI.database.repository.password.PasswordResetOtpRepository
-import com.kira.api.FilipinoRecipeAPI.database.repository.token.RefreshTokenRepository
-import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
-import com.kira.api.FilipinoRecipeAPI.models.enums.Role
-import com.kira.api.FilipinoRecipeAPI.models.exception.UserAlreadyExistsException
+import com.kira.api.FilipinoRecipeAPI.exception.UserAlreadyExistsException
+import com.kira.api.FilipinoRecipeAPI.model.RefreshToken
+import com.kira.api.FilipinoRecipeAPI.model.User
+import com.kira.api.FilipinoRecipeAPI.model.enums.Role
+import com.kira.api.FilipinoRecipeAPI.repository.password.PasswordResetOtpRepository
+import com.kira.api.FilipinoRecipeAPI.repository.token.RefreshTokenRepository
+import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
 import com.kira.api.FilipinoRecipeAPI.security.HashEncoder
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.authentication.BadCredentialsException

@@ -1,14 +1,14 @@
 package com.kira.api.FilipinoRecipeAPI.service
 
-import com.kira.api.FilipinoRecipeAPI.database.model.PasswordResetOtp
-import com.kira.api.FilipinoRecipeAPI.database.repository.password.PasswordResetOtpRepository
-import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
-import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
-import com.kira.api.FilipinoRecipeAPI.models.requests.ForgotPasswordRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.ResetPasswordRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.VerifyOtpRequest
-import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.OtpVerificationResponse
+import com.kira.api.FilipinoRecipeAPI.model.PasswordResetOtp
+import com.kira.api.FilipinoRecipeAPI.model.enums.ResponseStatus
+import com.kira.api.FilipinoRecipeAPI.model.requests.ForgotPasswordRequest
+import com.kira.api.FilipinoRecipeAPI.model.requests.ResetPasswordRequest
+import com.kira.api.FilipinoRecipeAPI.model.requests.VerifyOtpRequest
+import com.kira.api.FilipinoRecipeAPI.model.response.ApiResponse
+import com.kira.api.FilipinoRecipeAPI.model.response.OtpVerificationResponse
+import com.kira.api.FilipinoRecipeAPI.repository.password.PasswordResetOtpRepository
+import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.security.SecureRandom

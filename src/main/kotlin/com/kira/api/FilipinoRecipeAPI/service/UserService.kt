@@ -1,9 +1,9 @@
 package com.kira.api.FilipinoRecipeAPI.service
 
-import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
-import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
-import com.kira.api.FilipinoRecipeAPI.models.response.UserResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.mapper.toResponse
+import com.kira.api.FilipinoRecipeAPI.exception.ResourceNotFoundException
+import com.kira.api.FilipinoRecipeAPI.model.response.UserResponse
+import com.kira.api.FilipinoRecipeAPI.model.response.mapper.toResponse
+import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
 import org.springframework.stereotype.Service
 
 @Service

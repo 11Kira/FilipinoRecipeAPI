@@ -1,11 +1,11 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
-import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
-import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
-import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.model.enums.ResponseStatus
+import com.kira.api.FilipinoRecipeAPI.model.requests.RecipeRequest
+import com.kira.api.FilipinoRecipeAPI.model.requests.patch.RecipePatchRequest
+import com.kira.api.FilipinoRecipeAPI.model.response.ApiResponse
+import com.kira.api.FilipinoRecipeAPI.model.response.PagingResponse
+import com.kira.api.FilipinoRecipeAPI.model.response.RecipeResponse
 import com.kira.api.FilipinoRecipeAPI.service.RecipeService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
