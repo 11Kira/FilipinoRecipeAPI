@@ -2,11 +2,14 @@ package com.kira.api.FilipinoRecipeAPI.controller
 
 import com.kira.api.FilipinoRecipeAPI.dto.requests.LoginRequest
 import com.kira.api.FilipinoRecipeAPI.dto.requests.LogoutRequest
-import com.kira.api.FilipinoRecipeAPI.dto.requests.RefreshRequest
+import com.kira.api.FilipinoRecipeAPI.dto.requests.RefreshTokenRequest
 import com.kira.api.FilipinoRecipeAPI.dto.requests.RegistrationRequest
 import com.kira.api.FilipinoRecipeAPI.dto.response.ApiResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.AuthResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.RefreshTokenResponse
 import com.kira.api.FilipinoRecipeAPI.model.enums.ResponseStatus
 import com.kira.api.FilipinoRecipeAPI.service.AuthService
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -19,26 +22,26 @@ class AuthController(
     private val authService: AuthService
 ) {
     @PostMapping("/register")
-    fun register(@RequestBody body: RegistrationRequest): ResponseEntity<ApiResponse<Unit>> {
-        authService.registerUser(body.email, body.password, body.username)
+    fun register(@Valid @RequestBody request: RegistrationRequest): ResponseEntity<ApiResponse<AuthResponse>> {
+        val response = authService.registerUser(request)
         return ResponseEntity.ok(
-            ApiResponse(ResponseStatus.SUCCESS, "User registered successfully", null)
+            ApiResponse(ResponseStatus.SUCCESS, "User registered successfully", response)
         )
     }
 
     @PostMapping("/login")
-    fun login(@RequestBody body: LoginRequest): ResponseEntity<ApiResponse<AuthService.TokenPair>> {
-        val tokens = authService.loginUser(body.email, body.password)
+    fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<ApiResponse<AuthResponse>> {
+        val response = authService.loginUser(request)
         return ResponseEntity.ok(
-            ApiResponse(ResponseStatus.SUCCESS, "Login successful", tokens)
+            ApiResponse(ResponseStatus.SUCCESS, "Login successful", response)
         )
     }
 
     @PostMapping("/refresh")
-    fun refresh(@RequestBody body: RefreshRequest): ResponseEntity<ApiResponse<AuthService.TokenPair>> {
-        val tokens = authService.refresh(body.refreshToken)
+    fun refresh(@Valid @RequestBody request: RefreshTokenRequest): ResponseEntity<ApiResponse<RefreshTokenResponse>> {
+        val response = authService.refreshToken(request)
         return ResponseEntity.ok(
-            ApiResponse(ResponseStatus.SUCCESS, "Token refreshed", tokens)
+            ApiResponse(ResponseStatus.SUCCESS, "Token refreshed", response)
         )
     }
 
@@ -46,7 +49,7 @@ class AuthController(
     fun logout(@RequestBody request: LogoutRequest): ResponseEntity<ApiResponse<Unit>> {
         authService.revokeToken(request.refreshToken)
         return ResponseEntity.ok(
-            ApiResponse(ResponseStatus.SUCCESS, "Logout successful", null)
+            ApiResponse(ResponseStatus.SUCCESS, "Logout successful", Unit)
         )
     }
 }

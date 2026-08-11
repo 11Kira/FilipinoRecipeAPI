@@ -1,7 +1,7 @@
 package com.kira.api.FilipinoRecipeAPI.exception
 
+import com.kira.api.FilipinoRecipeAPI.dto.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.model.enums.ResponseStatus
-import com.kira.api.FilipinoRecipeAPI.model.response.ApiResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.BadCredentialsException

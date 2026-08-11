@@ -8,7 +8,7 @@ import com.kira.api.FilipinoRecipeAPI.model.enums.Protein
 import java.time.Instant
 
 data class RecipeResponse(
-    val id: String,
+    val id: String?,
     val title: String,
     val description: String = "",
     val image: String,
