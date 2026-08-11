@@ -1,0 +1,17 @@
+package com.kira.api.FilipinoRecipeAPI.repository.recipe
+
+import com.kira.api.FilipinoRecipeAPI.model.Recipe
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.mongodb.repository.MongoRepository
+
+interface RecipeRepository : MongoRepository<Recipe, String>, RecipeCustomRepository {
+    override fun findAll(pageable: Pageable): Page<Recipe>
+
+    fun findAllByIdIn(ids: List<String>?, pageable: Pageable): Page<Recipe>
+
+    fun findByTitleContainingIgnoreCase(
+        title: String,
+        pageable: Pageable
+    ): Page<Recipe>
+}

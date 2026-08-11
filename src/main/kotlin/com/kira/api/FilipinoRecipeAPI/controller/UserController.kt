@@ -1,10 +1,10 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
-import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
-import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.UserResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.ApiResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.PagingResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.UserResponse
+import com.kira.api.FilipinoRecipeAPI.model.enums.ResponseStatus
 import com.kira.api.FilipinoRecipeAPI.service.RecipeService
 import com.kira.api.FilipinoRecipeAPI.service.UserService
 import org.springframework.data.domain.PageRequest

@@ -1,13 +1,19 @@
 package com.kira.api.FilipinoRecipeAPI.service
 
-import com.kira.api.FilipinoRecipeAPI.database.model.RefreshToken
-import com.kira.api.FilipinoRecipeAPI.database.model.User
-import com.kira.api.FilipinoRecipeAPI.database.repository.password.PasswordResetOtpRepository
-import com.kira.api.FilipinoRecipeAPI.database.repository.token.RefreshTokenRepository
-import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
-import com.kira.api.FilipinoRecipeAPI.models.enums.Role
-import com.kira.api.FilipinoRecipeAPI.models.exception.UserAlreadyExistsException
+import com.kira.api.FilipinoRecipeAPI.dto.requests.LoginRequest
+import com.kira.api.FilipinoRecipeAPI.dto.requests.RefreshTokenRequest
+import com.kira.api.FilipinoRecipeAPI.dto.requests.RegistrationRequest
+import com.kira.api.FilipinoRecipeAPI.dto.response.AuthResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.RefreshTokenResponse
+import com.kira.api.FilipinoRecipeAPI.exception.UserAlreadyExistsException
+import com.kira.api.FilipinoRecipeAPI.model.RefreshToken
+import com.kira.api.FilipinoRecipeAPI.model.User
+import com.kira.api.FilipinoRecipeAPI.model.enums.Role
+import com.kira.api.FilipinoRecipeAPI.repository.password.PasswordResetOtpRepository
+import com.kira.api.FilipinoRecipeAPI.repository.token.RefreshTokenRepository
+import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
 import com.kira.api.FilipinoRecipeAPI.security.HashEncoder
+import org.apache.coyote.BadRequestException
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.stereotype.Service
@@ -31,81 +37,84 @@ class AuthService(
 
     private val secureRandom = SecureRandom()
 
+    @Transactional
     fun registerUser(
-        email: String,
-        password: String,
-        username: String,
-    ): User {
-        if (userRepository.existsByEmail(email)) {
+        request: RegistrationRequest
+    ): AuthResponse {
+        if (userRepository.existsByEmail(request.email)) {
             throw UserAlreadyExistsException("An account with this email already exists.")
         }
-        if (userRepository.existsByUsername(email)) {
+        if (userRepository.existsByUsername(request.username)) {
             throw UserAlreadyExistsException("This username is already taken.")
         }
-        return userRepository.save(
-            User(
-                email = email,
-                hashedPassword = hashEncoder.encode(password),
-                username = username,
-                role = Role.USER
-            )
+
+        val user = User(
+            email = request.email,
+            hashedPassword = hashEncoder.encode(request.password),
+            username = request.username,
+            role = Role.USER
         )
-    }
 
-    fun loginUser(
-        email: String,
-        password: String,
-    ): TokenPair {
-        val user = userRepository.findByEmail(email)
-            ?: throw BadCredentialsException("Invalid credentials.")
-        if (!hashEncoder.matches(password, user.hashedPassword)) {
-            throw BadCredentialsException("Invalid credentials.")
-        }
+        val saved = userRepository.save(user)
+        val accessToken = jwtService.generateAccessToken(saved.id!!, user.role.name)
+        val refreshToken = jwtService.generateRefreshToken(saved.id)
 
-        val newAccessToken = jwtService.generateAccessToken(user.id.toString(), user.role.name)
-        val newRefreshToken = jwtService.generateRefreshToken(user.id.toString())
-
-        storeRefreshToken(user.id.toString(), newRefreshToken)
-
-        return TokenPair(
-            newAccessToken,
-            newRefreshToken
+        storeRefreshToken(saved.id, refreshToken)
+        return AuthResponse(
+            accessToken = accessToken,
+            refreshToken = refreshToken,
         )
     }
 
     @Transactional
-    fun refresh(refreshToken: String): TokenPair {
-        if (!jwtService.validateRefreshToken(refreshToken)) {
-            throw IllegalArgumentException("Invalid refresh token.")
+    fun loginUser(
+        request: LoginRequest
+    ): AuthResponse {
+        val user = userRepository.findByEmail(request.email)
+            ?: throw BadCredentialsException("Invalid credentials.")
+        if (!hashEncoder.matches(request.password, user.hashedPassword)) {
+            throw BadCredentialsException("Invalid credentials.")
         }
 
-        val userId = jwtService.getUserIdFromToken(refreshToken)
-        val user = userRepository.findById(userId)
-            .orElseThrow { IllegalArgumentException("User not found.") }
+        val accessToken = jwtService.generateAccessToken(user.id!!, user.role.name)
+        val refreshToken = jwtService.generateRefreshToken(user.id)
 
-        val hashed = hashToken(refreshToken)
+        storeRefreshToken(user.id, refreshToken)
 
-        // Check if this refresh token exists in the DB
-        refreshTokenRepository.findByUserIdAndHashedToken(user.id.toString(), hashed)
-            ?: throw IllegalArgumentException("Refresh token not recognized.")
-
-        // Delete old token (Rotating the refresh token)
-        refreshTokenRepository.deleteByUserIdAndHashedToken(user.id.toString(), hashed)
-
-        // Generate new pair - passing current role from DB for the Access Token
-        val newAccessToken = jwtService.generateAccessToken(userId, user.role.name)
-        val newRefreshToken = jwtService.generateRefreshToken(userId)
-
-        storeRefreshToken(user.id.toString(), newRefreshToken)
-
-        return TokenPair(
-            accessToken = newAccessToken,
-            refreshToken = newRefreshToken
+        return AuthResponse(
+            accessToken,
+            refreshToken
         )
     }
 
+    @Transactional
+    fun refreshToken(request: RefreshTokenRequest): RefreshTokenResponse {
+        if (!jwtService.validateRefreshToken(request.refreshToken)) {
+            throw BadRequestException("Invalid or expired refresh token.")
+        }
+
+        val userId = jwtService.getUserIdFromToken(request.refreshToken)
+        val user = userRepository.findById(userId)
+            .orElseThrow { IllegalArgumentException("User not found.") }
+        val hashed = hashToken(request.refreshToken)
+
+        // Find token globally across devices
+        val tokenDoc = refreshTokenRepository.findByHashedToken(hashed)
+            ?: throw IllegalArgumentException("Refresh token not recognized.")
+
+        // Safety check on expiration
+        if (tokenDoc.expiresAt.isBefore(Instant.now())) {
+            refreshTokenRepository.delete(tokenDoc)
+            throw BadRequestException("Refresh token has expired.")
+        }
+
+        // Issue a new access token for the correct user ID found in the database record
+        val newAccessToken = jwtService.generateAccessToken(tokenDoc.userId, user.role.name)
+
+        return RefreshTokenResponse(accessToken = newAccessToken)
+    }
+
     private fun storeRefreshToken(userId: String, rawRefreshToken: String) {
-        refreshTokenRepository.deleteByUserId(userId)
         val hashed = hashToken(rawRefreshToken)
         val expiryMs = jwtService.refreshTokenValidityMs
         val expiresAt = Instant.now().plusMillis(expiryMs)

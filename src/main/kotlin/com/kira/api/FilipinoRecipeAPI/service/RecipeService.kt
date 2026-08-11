@@ -1,13 +1,12 @@
 package com.kira.api.FilipinoRecipeAPI.service
 
-import com.kira.api.FilipinoRecipeAPI.database.model.Recipe
-import com.kira.api.FilipinoRecipeAPI.database.repository.recipe.RecipeRepository
-import com.kira.api.FilipinoRecipeAPI.database.repository.user.UserRepository
-import com.kira.api.FilipinoRecipeAPI.models.exception.ResourceNotFoundException
-import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
-import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.mapper.toResponse
+import com.kira.api.FilipinoRecipeAPI.dto.requests.RecipeRequest
+import com.kira.api.FilipinoRecipeAPI.dto.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.exception.ResourceNotFoundException
+import com.kira.api.FilipinoRecipeAPI.mapper.RecipeMapper
+import com.kira.api.FilipinoRecipeAPI.model.Recipe
+import com.kira.api.FilipinoRecipeAPI.repository.recipe.RecipeRepository
+import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -19,7 +18,8 @@ import java.time.Instant
 @Service
 class RecipeService(
     private val recipeRepository: RecipeRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val recipeMapper: RecipeMapper
 ) {
     fun getAllRecipes(
         userId: String?,
@@ -57,7 +57,7 @@ class RecipeService(
             pageable = pageable,
         )
 
-        return pageResult.map { it.toResponse(isFavorited = favoriteIds.contains(it.id)) }
+        return pageResult.map { recipeMapper.toResponse(it, isFavorited = favoriteIds.contains(it.id)) }
     }
 
     fun toggleFavorite(recipeId: String, userId: String): String {
@@ -101,7 +101,7 @@ class RecipeService(
             recipeIds = favoriteIds
         )
 
-        return pageResult.map { it.toResponse(isFavorited = true) }
+        return pageResult.map { recipeMapper.toResponse(it, isFavorited = true) }
     }
 
     fun getRecipeById(recipeId: String, userId: String?): RecipeResponse {
@@ -114,7 +114,7 @@ class RecipeService(
         } else {
             false
         }
-        return recipe.toResponse(isFavorited = isFavorited)
+        return recipeMapper.toResponse(recipe, isFavorited = isFavorited)
     }
 
     fun saveRecipe(body: RecipeRequest, ownerId: String): RecipeResponse {
@@ -137,7 +137,9 @@ class RecipeService(
             updatedAt = Instant.now(),
             published = true
         )
-        return recipeRepository.save(recipe).toResponse()
+
+        val saved = recipeRepository.save(recipe)
+        return recipeMapper.toResponse(saved, isFavorited = false)
     }
 
     fun updateRecipe(id: String, body: RecipeRequest, userId: String): RecipeResponse {
@@ -165,11 +167,11 @@ class RecipeService(
             updatedAt = Instant.now(),
             createdAt = existingRecipe.createdAt
         )
-
-        return recipeRepository.save(updatedRecipe).toResponse(isFavorited = false)
+        val saved = recipeRepository.save(updatedRecipe)
+        return recipeMapper.toResponse(saved, isFavorited = false)
     }
 
-    fun patchRecipe(id: String, body: RecipePatchRequest, userId: String): RecipeResponse {
+    fun patchRecipe(id: String, body: RecipeRequest, userId: String): RecipeResponse {
         val existingRecipe = recipeRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Recipe not found with id: $id") }
 
@@ -205,8 +207,8 @@ class RecipeService(
             updatedAt = Instant.now(),
             createdAt = existingRecipe.createdAt
         )
-
-        return recipeRepository.save(updatedRecipe).toResponse(isFavorited = false)
+        val saved = recipeRepository.save(updatedRecipe)
+        return recipeMapper.toResponse(saved, isFavorited = false)
     }
 
     fun deleteRecipe(id: String, userId: String) {

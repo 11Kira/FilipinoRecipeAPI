@@ -1,11 +1,10 @@
 package com.kira.api.FilipinoRecipeAPI.controller
 
-import com.kira.api.FilipinoRecipeAPI.models.enums.ResponseStatus
-import com.kira.api.FilipinoRecipeAPI.models.requests.RecipeRequest
-import com.kira.api.FilipinoRecipeAPI.models.requests.patch.RecipePatchRequest
-import com.kira.api.FilipinoRecipeAPI.models.response.ApiResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.PagingResponse
-import com.kira.api.FilipinoRecipeAPI.models.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.dto.requests.RecipeRequest
+import com.kira.api.FilipinoRecipeAPI.dto.response.ApiResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.PagingResponse
+import com.kira.api.FilipinoRecipeAPI.dto.response.RecipeResponse
+import com.kira.api.FilipinoRecipeAPI.model.enums.ResponseStatus
 import com.kira.api.FilipinoRecipeAPI.service.RecipeService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
@@ -100,7 +99,7 @@ class RecipeController(
     @PatchMapping("/{id}")
     fun patchRecipe(
         @PathVariable id: String,
-        @RequestBody body: RecipePatchRequest,
+        @RequestBody body: RecipeRequest,
         authentication: Authentication
     ): ResponseEntity<ApiResponse<RecipeResponse>> {
         val userId = authentication.principal.toString()
