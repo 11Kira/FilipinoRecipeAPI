@@ -28,15 +28,8 @@ class AuthService(
     private val jwtService: JwtService,
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val otpRepository: PasswordResetOtpRepository,
     private val hashEncoder: HashEncoder,
-    private val mailSender: JavaMailSender
 ) {
-
-    data class TokenPair(val accessToken: String, val refreshToken: String)
-
-    private val secureRandom = SecureRandom()
-
     @Transactional
     fun registerUser(
         request: RegistrationRequest
@@ -98,17 +91,14 @@ class AuthService(
             .orElseThrow { IllegalArgumentException("User not found.") }
         val hashed = hashToken(request.refreshToken)
 
-        // Find token globally across devices
         val tokenDoc = refreshTokenRepository.findByHashedToken(hashed)
             ?: throw IllegalArgumentException("Refresh token not recognized.")
 
-        // Safety check on expiration
         if (tokenDoc.expiresAt.isBefore(Instant.now())) {
             refreshTokenRepository.delete(tokenDoc)
             throw BadRequestException("Refresh token has expired.")
         }
 
-        // Issue a new access token for the correct user ID found in the database record
         val newAccessToken = jwtService.generateAccessToken(tokenDoc.userId, user.role.name)
 
         return RefreshTokenResponse(accessToken = newAccessToken)
