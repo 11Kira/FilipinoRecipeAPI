@@ -2,54 +2,43 @@ name: Automated Deployment to DigitalOcean
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Source Code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
+          java-version: '17'
 
-      - name: Grant Execute Permission to Gradle
+      - name: Grant Execute Permission for gradlew
         run: chmod +x gradlew
 
-      # Let Gradle build its standard file naturally
-      - name: Build Production BootJar
+      - name: Build with Gradle
         run: ./gradlew bootJar -x test
 
-      # Copy JAR to temporary directory under juliusv's home
-      - name: Copy Executable Jar to Droplet
-        uses: appleboy/scp-action@v1
+      - name: Copy JAR to DigitalOcean Droplet
+        uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           source: "build/libs/*.jar"
-          target: "/home/juliusv/recipe-api-temp"
+          target: "/opt/filipino-recipe-api"
           strip_components: 2
 
-      # Move JAR to final deployment destination and restart service
-      - name: Execute Remote SSH Commands to Restart App
-        uses: appleboy/ssh-action@v1
+      - name: Restart Remote Service
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            sudo mkdir -p /opt/filipino-recipe-api
-            sudo chown -R juliusv:juliusv /opt/filipino-recipe-api
-            mv /home/juliusv/recipe-api-temp/*.jar /opt/filipino-recipe-api/filipino-recipe-api-0.0.1-SNAPSHOT.jar
-            rm -rf /home/juliusv/recipe-api-temp
             sudo systemctl restart filipino-recipe-api
-            sleep 3
-            sudo systemctl status filipino-recipe-api --no-pager | grep "Active:"
