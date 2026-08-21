@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -27,17 +27,18 @@ jobs:
       - name: Build Production BootJar
         run: ./gradlew bootJar -x test
 
-      # Use pinned versions and look for the standard spring boot jar structure
+      # Copy JAR to temporary directory under juliusv's home
       - name: Copy Executable Jar to Droplet
         uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
-          source: "build/libs/*.jar" # Captures your standard compiled jar safely
-          target: "/home/kira/recipe-api-temp"
+          source: "build/libs/*.jar"
+          target: "/home/juliusv/recipe-api-temp"
           strip_components: 2
 
+      # Move JAR to final deployment destination and restart service
       - name: Execute Remote SSH Commands to Restart App
         uses: appleboy/ssh-action@v1
         with:
@@ -46,9 +47,9 @@ jobs:
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
             sudo mkdir -p /opt/filipino-recipe-api
-            sudo chown -R kira:kira /opt/filipino-recipe-api
-            mv /home/kira/recipe-api-temp/*.jar /opt/filipino-recipe-api/filipino-recipe-api-0.0.1-SNAPSHOT.jar
-            rm -rf /home/kira/recipe-api-temp
+            sudo chown -R juliusv:juliusv /opt/filipino-recipe-api
+            mv /home/juliusv/recipe-api-temp/*.jar /opt/filipino-recipe-api/filipino-recipe-api-0.0.1-SNAPSHOT.jar
+            rm -rf /home/juliusv/recipe-api-temp
             sudo systemctl restart filipino-recipe-api
             sleep 3
             sudo systemctl status filipino-recipe-api --no-pager | grep "Active:"
