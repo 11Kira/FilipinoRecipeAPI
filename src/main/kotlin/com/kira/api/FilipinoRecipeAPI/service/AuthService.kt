@@ -9,17 +9,14 @@ import com.kira.api.FilipinoRecipeAPI.exception.UserAlreadyExistsException
 import com.kira.api.FilipinoRecipeAPI.model.RefreshToken
 import com.kira.api.FilipinoRecipeAPI.model.User
 import com.kira.api.FilipinoRecipeAPI.model.enums.Role
-import com.kira.api.FilipinoRecipeAPI.repository.password.PasswordResetOtpRepository
 import com.kira.api.FilipinoRecipeAPI.repository.token.RefreshTokenRepository
 import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
 import com.kira.api.FilipinoRecipeAPI.security.HashEncoder
 import org.apache.coyote.BadRequestException
-import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.MessageDigest
-import java.security.SecureRandom
 import java.time.Instant
 import java.util.*
 
