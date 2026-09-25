@@ -24,7 +24,7 @@ class PasswordResetService(
 ) {
 
     fun initiatePasswordReset(request: ForgotPasswordRequest) {
-        val user = userRepository.existsByEmail(request.email)
+        val user = userRepository.findByEmail(request.email)
 
         if (user == null) {
             return
