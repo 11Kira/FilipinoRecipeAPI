@@ -3,102 +3,92 @@ package com.kira.api.FilipinoRecipeAPI.service
 import com.kira.api.FilipinoRecipeAPI.dto.requests.ForgotPasswordRequest
 import com.kira.api.FilipinoRecipeAPI.dto.requests.ResetPasswordRequest
 import com.kira.api.FilipinoRecipeAPI.dto.requests.VerifyOtpRequest
-import com.kira.api.FilipinoRecipeAPI.dto.response.ApiResponse
 import com.kira.api.FilipinoRecipeAPI.dto.response.OtpVerificationResponse
-import com.kira.api.FilipinoRecipeAPI.model.PasswordResetOtp
-import com.kira.api.FilipinoRecipeAPI.model.enums.ResponseStatus
-import com.kira.api.FilipinoRecipeAPI.repository.password.PasswordResetOtpRepository
+import com.kira.api.FilipinoRecipeAPI.exception.ResourceNotFoundException
+import com.kira.api.FilipinoRecipeAPI.model.PasswordResetToken
+import com.kira.api.FilipinoRecipeAPI.repository.password.PasswordResetTokenRepository
 import com.kira.api.FilipinoRecipeAPI.repository.user.UserRepository
+import org.apache.coyote.BadRequestException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import java.security.SecureRandom
+import java.time.Instant
 import java.util.*
+import kotlin.random.Random
 
 @Service
 class PasswordResetService(
-    private val otpRepository: PasswordResetOtpRepository,
+    private val passwordResetTokenRepository: PasswordResetTokenRepository,
     private val userRepository: UserRepository,
     private val emailService: EmailService,
     private val passwordEncoder: PasswordEncoder
 ) {
-    private val secureRandom = SecureRandom()
 
-    fun initiatePasswordReset(request: ForgotPasswordRequest): ApiResponse<Unit> {
-        val email = request.email.trim().lowercase()
-        val userExists = userRepository.existsByEmail(email)
+    fun initiatePasswordReset(request: ForgotPasswordRequest) {
+        val user = userRepository.existsByEmail(request.email)
 
-        if (!userExists) {
-            return ApiResponse(
-                status = ResponseStatus.SUCCESS,
-                message = "If an account matches that email, a verification code has been dispatched.",
-                data = null
-            )
+        if (user == null) {
+            return
         }
 
-        otpRepository.deleteByEmail(email)
+        val otp = String.format("%06d", Random.nextInt(1000000))
 
-        val generatedOtp = (100000 + secureRandom.nextInt(900000)).toString()
-
-        otpRepository.save(PasswordResetOtp(email = email, otp = generatedOtp))
-
-        try {
-            emailService.sendPasswordResetOtp(email, generatedOtp)
-        } catch (e: Exception) {
-            return ApiResponse(
-                ResponseStatus.FAILED,
-                "Failed to send verification email. Please try again later.",
-                null
-            )
+        passwordResetTokenRepository.findByEmail(request.email).ifPresent {
+            passwordResetTokenRepository.delete(it)
         }
-
-        return ApiResponse(
-            status = ResponseStatus.SUCCESS,
-            message = "If an account matches that email, a verification code has been dispatched.",
-            data = null
+        val resetTokenEntity = PasswordResetToken(
+            email = request.email,
+            otp = otp,
+            createdAt = Instant.now() // Save the current time
         )
+        passwordResetTokenRepository.save(resetTokenEntity)
+
+        emailService.sendPasswordResetOtp(request.email, otp)
     }
 
-    fun validateOtpCode(request: VerifyOtpRequest): ApiResponse<OtpVerificationResponse> {
-        val email = request.email.trim().lowercase()
-        val record = otpRepository.findByEmail(email)
-            ?: return ApiResponse(ResponseStatus.FAILED, "Code has expired or does not exist.", null)
+    fun validateOtpCode(request: VerifyOtpRequest): OtpVerificationResponse {
+        val tokenEntity = passwordResetTokenRepository.findByEmail(request.email)
+            .orElseThrow { BadRequestException("Invalid or expired OTP request.") }
 
-        if (record.otp != request.otp) {
-            return ApiResponse(ResponseStatus.FAILED, "Invalid code. Please verify and try again.", null)
+        if (tokenEntity.createdAt.plusSeconds(15 * 60).isBefore(Instant.now())) {
+            passwordResetTokenRepository.delete(tokenEntity)
+            throw BadRequestException("OTP has expired.")
         }
 
-        val transientResetToken = UUID.randomUUID().toString()
+        if (tokenEntity.otp != request.otp) {
+            throw BadRequestException("Invalid OTP code.")
+        }
 
-        otpRepository.save(record.copy(resetToken = transientResetToken))
-
-        return ApiResponse(
-            status = ResponseStatus.SUCCESS,
-            message = "Code verified successfully.",
-            data = OtpVerificationResponse(resetToken = transientResetToken)
+        val secureResetToken = UUID.randomUUID().toString()
+        val updatedEntity = tokenEntity.copy(
+            resetToken = secureResetToken,
+            isVerified = true
         )
+        passwordResetTokenRepository.save(updatedEntity)
+
+        return OtpVerificationResponse(resetToken = secureResetToken)
     }
 
-    fun completePasswordReset(request: ResetPasswordRequest): ApiResponse<Unit> {
-        val email = request.email.trim().lowercase()
-        val otpRecord = otpRepository.findByEmail(email)
-            ?: return ApiResponse(ResponseStatus.FAILED, "Session expired. Please request a new code.", null)
+    fun completePasswordReset(request: ResetPasswordRequest) {
+        val tokenEntity = passwordResetTokenRepository.findByResetToken(request.resetToken)
+            .orElseThrow { BadRequestException("Invalid or expired reset token.") }
 
-        if (otpRecord.resetToken == null || otpRecord.resetToken != request.resetToken) {
-            return ApiResponse(ResponseStatus.FAILED, "Unauthorized reset transaction.", null)
+        if (!tokenEntity.isVerified || tokenEntity.email != request.email) {
+            throw BadRequestException("Unauthorized password reset attempt.")
         }
 
-        val user = userRepository.findByEmail(email)
-            ?: return ApiResponse(ResponseStatus.FAILED, "User record lookup failed.", null)
+        if (tokenEntity.createdAt.plusSeconds(15 * 60).isBefore(Instant.now())) {
+            passwordResetTokenRepository.delete(tokenEntity)
+            throw BadRequestException("Reset token has expired.")
+        }
 
-        val updatedUser = user.copy(hashedPassword = passwordEncoder.encode(request.newPassword))
+
+        val user = userRepository.findByEmail(request.email)
+            ?: throw ResourceNotFoundException("User not found.")
+
+        val encodedPassword = passwordEncoder.encode(request.newPassword)
+        val updatedUser = user.copy(hashedPassword = encodedPassword)
         userRepository.save(updatedUser)
 
-        otpRepository.delete(otpRecord)
-
-        return ApiResponse(
-            status = ResponseStatus.SUCCESS,
-            message = "Your password has been successfully reset.",
-            data = null
-        )
+        passwordResetTokenRepository.delete(tokenEntity)
     }
 }
