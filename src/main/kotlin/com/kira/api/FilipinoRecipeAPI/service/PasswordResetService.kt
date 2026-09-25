@@ -42,7 +42,7 @@ class PasswordResetService(
         otpRepository.save(PasswordResetOtp(email = email, otp = generatedOtp))
 
         try {
-            emailService.sendOtpEmail(email, generatedOtp)
+            emailService.sendPasswordResetOtp(email, generatedOtp)
         } catch (e: Exception) {
             return ApiResponse(
                 ResponseStatus.FAILED,
