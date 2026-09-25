@@ -24,25 +24,37 @@ class PasswordResetService(
 ) {
 
     fun initiatePasswordReset(request: ForgotPasswordRequest) {
+        println("DEBUG: Starting password reset for email: ${request.email}")
+
         val user = userRepository.findByEmail(request.email)
+        println("DEBUG: User lookup result: ${user != null}")
 
         if (user == null) {
+            println("DEBUG: User not found, returning early.")
             return
         }
 
         val otp = String.format("%06d", Random.nextInt(1000000))
+        println("DEBUG: Generated OTP: $otp")
 
         passwordResetTokenRepository.findByEmail(request.email).ifPresent {
+            println("DEBUG: Deleting existing token for email")
             passwordResetTokenRepository.delete(it)
         }
+
         val resetTokenEntity = PasswordResetToken(
             email = request.email,
             otp = otp,
-            createdAt = Instant.now() // Save the current time
+            createdAt = Instant.now()
         )
-        passwordResetTokenRepository.save(resetTokenEntity)
 
+        println("DEBUG: Attempting to save token to MongoDB...")
+        passwordResetTokenRepository.save(resetTokenEntity)
+        println("DEBUG: Token successfully saved to MongoDB.")
+
+        println("DEBUG: Calling email service...")
         emailService.sendPasswordResetOtp(request.email, otp)
+        println("DEBUG: Email service call completed.")
     }
 
     fun validateOtpCode(request: VerifyOtpRequest): OtpVerificationResponse {
