@@ -5,13 +5,14 @@ import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.Instant
 
-@Document(collection = "password_reset_otps")
-data class PasswordResetOtp(
+@Document(collection = "password_reset_tokens")
+data class PasswordResetToken(
     @Id val id: String? = null,
-    @Indexed val email: String,
+    val email: String,
     val otp: String,
     val resetToken: String? = null,
+    val isVerified: Boolean = false,
 
-    @Indexed(expireAfter = "5m")
-    val createdAt: Instant = Instant.now()
+    @Indexed(expireAfter = "15m")
+    val createdAt: Instant
 )
